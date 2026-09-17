@@ -11,8 +11,14 @@ import { Input } from "../../components/Input";
 export function LoginPage({ onNav }: { onNav: (s: Screen, role?: Role) => void }) {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
+  const [error, setError] = useState("");
 
   function handleLogin() {
+    if (email === "" || pass === "") {
+      setError("Por favor, completa todos los campos");
+      return;
+    }
+    setError("");
     if (email.includes("agente")) onNav("agent-dashboard", "agent");
     else if (email.includes("admin")) onNav("admin-dashboard", "admin");
     else onNav("client-dashboard", "client");
@@ -109,6 +115,7 @@ export function LoginPage({ onNav }: { onNav: (s: Screen, role?: Role) => void }
               <div className="space-y-5 mb-5">
                 <Input label="Correo electrónico" type="email" value={email} onChange={setEmail} placeholder="correo@ejemplo.com" />
                 <Input label="Contraseña" type="password" value={pass} onChange={setPass} placeholder="••••••••" />
+                {error && <p className="text-red-500 text-sm">{error}</p>}
               </div>
               <div className="flex justify-end mb-6">
                 <button className="text-sm text-violet-600 hover:underline font-medium">¿Olvidaste tu contraseña?</button>
