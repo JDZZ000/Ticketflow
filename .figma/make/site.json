@@ -1,0 +1,10 @@
+{
+  "description": "Manage event ticketing, reservations, and user profiles with a professional platform designed for clients, agents, and administrators to enhance event experiences.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
