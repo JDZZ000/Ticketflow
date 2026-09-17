@@ -8,7 +8,7 @@ import { Btn } from "../../components/Btn";
 import { Input } from "../../components/Input";
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
-export function LoginPage({ onNav }: { onNav: (s: Screen, role?: Role) => void }) {
+export function LoginPage({ onNav, usuarios }: { onNav: (s: Screen, role?: Role) => void; usuarios: { email: string; pass: string; role: Role }[] }) {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
@@ -19,9 +19,15 @@ export function LoginPage({ onNav }: { onNav: (s: Screen, role?: Role) => void }
       return;
     }
     setError("");
-    if (email.includes("agente")) onNav("agent-dashboard", "agent");
-    else if (email.includes("admin")) onNav("admin-dashboard", "admin");
-    else onNav("client-dashboard", "client");
+    const encontrado = usuarios.find(u => u.email === email && u.pass === pass);
+    if (!encontrado) {
+      setError("Correo o contraseña incorrectos");
+      return;
+    }
+    onNav(
+      encontrado.role === "agent" ? "agent-dashboard" : encontrado.role === "admin" ? "admin-dashboard" : "client-dashboard",
+      encontrado.role
+    );
   }
 
   return (

@@ -1,16 +1,29 @@
 import { useState } from "react";
-import type { Screen } from "../../types";
+import type { Screen, Role } from "../../types";
 import { PRIMARY } from "../../utils/theme";
 import { Logo } from "../../components/Logo";
 import { Btn } from "../../components/Btn";
 import { Input } from "../../components/Input";
 
 // ─── REGISTER ─────────────────────────────────────────────────────────────────
-export function RegisterPage({ onNav }: { onNav: (s: Screen) => void }) {
+export function RegisterPage({ onNav, registrarUsuario }: { onNav: (s: Screen) => void; registrarUsuario: (email: string, pass: string, role: Role) => void }) {
   const [tipoUsuario, setTipoUsuario] = useState<"Cliente" | "Agente">("Cliente");
   const [form, setForm] = useState({ id: "", nombre: "", email: "", direccion: "", ciudad: "", telefono: "", pass: "", pass2: "" });
   const f = (k: keyof typeof form) => (v: string) => setForm(p => ({ ...p, [k]: v }));
-
+  const [error, setError] = useState("");
+  function handleRegister() {
+  if (form.nombre === "" || form.email === "" || form.pass === "" || form.pass2 === "") {
+    setError("Por favor, completa nombre, correo y contraseña");
+    return;
+  }
+  if (form.pass !== form.pass2) {
+    setError("Las contraseñas no coinciden");
+    return;
+  }
+  setError("");
+  registrarUsuario(form.email, form.pass, tipoUsuario === "Cliente" ? "client" : "agent");
+  onNav("login");
+}
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4" style={{ fontFamily: "Outfit, sans-serif" }}>
       <div className="bg-white rounded-3xl shadow-xl w-full max-w-2xl p-10">
@@ -36,17 +49,18 @@ export function RegisterPage({ onNav }: { onNav: (s: Screen) => void }) {
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <Input label="N.° de identificación" value={form.id} onChange={f("id")} placeholder="1234567890" />
-          <Input label="Nombre completo" value={form.nombre} onChange={f("nombre")} placeholder="María González" />
-          <Input label="Correo electrónico" type="email" value={form.email} onChange={f("email")} placeholder="correo@ejemplo.com" />
+          <Input label="Nombre completo" value={form.nombre} onChange={f("nombre")} placeholder="María González" required />
+          <Input label="Correo electrónico" type="email" value={form.email} onChange={f("email")} placeholder="correo@ejemplo.com" required />
           <Input label="Teléfono" value={form.telefono} onChange={f("telefono")} placeholder="+57 300 0000000" />
           <Input label="Dirección" value={form.direccion} onChange={f("direccion")} placeholder="Calle 123 # 45-67" />
           <Input label="Ciudad" value={form.ciudad} onChange={f("ciudad")} placeholder="Bogotá" />
-          <Input label="Contraseña" type="password" value={form.pass} onChange={f("pass")} placeholder="Mínimo 8 caracteres" />
-          <Input label="Confirmar contraseña" type="password" value={form.pass2} onChange={f("pass2")} placeholder="Repite tu contraseña" />
+          <Input label="Contraseña" type="password" value={form.pass} onChange={f("pass")} placeholder="Mínimo 8 caracteres" required />
+          <Input label="Confirmar contraseña" type="password" value={form.pass2} onChange={f("pass2")} placeholder="Repite tu contraseña" required />
         </div>
-
+        
+        {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
         <div className="mt-6 flex gap-3">
-          <Btn full size="lg" onClick={() => onNav("login")}>Crear cuenta</Btn>
+          <Btn full size="lg" onClick={handleRegister}>Crear cuenta</Btn>
           <Btn variant="ghost" size="lg" onClick={() => onNav("login")}>Cancelar</Btn>
         </div>
         <p className="text-center text-sm text-gray-500 mt-4">

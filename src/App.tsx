@@ -19,6 +19,10 @@ import { AdminDashboard } from "./pages/admin/AdminDashboard";
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState<Screen>("landing");
+  const [usuarios, setUsuarios] = useState<{ email: string; pass: string; role: Role }[]>([]);
+  function registrarUsuario(email: string, pass: string, role: Role) {
+    setUsuarios(prev => [...prev, { email, pass, role }]);
+  }
   const [role, setRole] = useState<Role>("client");
 
   function nav(s: Screen, r?: Role) {
@@ -32,8 +36,8 @@ export default function App() {
                        : { name: "Laura Ríos",      email: "laura@ticketflow.com" };
 
   if (screen === "landing")  return <LandingPage onNav={nav} />;
-  if (screen === "login")    return <LoginPage onNav={nav} />;
-  if (screen === "register") return <RegisterPage onNav={nav} />;
+  if (screen === "login")    return <LoginPage onNav={nav} usuarios={usuarios} />;
+  if (screen === "register") return <RegisterPage onNav={nav} registrarUsuario={registrarUsuario} />;
 
   if (screen === "client-dashboard" || screen === "client-events" || screen === "client-event-detail"
     || screen === "client-reserve" || screen === "client-reservations" || screen === "client-profile") {
