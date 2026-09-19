@@ -16,8 +16,8 @@ export function LandingPage({ onNav }: { onNav: (s: Screen) => void }) {
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4" style={{ background: NAV }}>
         <Logo size="md" on="dark" />
         <div className="flex items-center gap-4">
-          <button className="text-gray-300 hover:text-white text-sm font-medium transition" onClick={() => {}}>Eventos</button>
-          <button className="text-gray-300 hover:text-white text-sm font-medium transition" onClick={() => {}}>Nosotros</button>
+          <a href="#eventos" className="text-gray-300 hover:text-white text-sm font-medium transition">Eventos</a>
+          <a href="#nosotros" className="text-gray-300 hover:text-white text-sm font-medium transition">Nosotros</a>
           <Btn size="sm" variant="outline" onClick={() => onNav("login")}>Iniciar sesión</Btn>
           <Btn size="sm" onClick={() => onNav("register")}>Registrarse</Btn>
         </div>
@@ -66,8 +66,35 @@ export function LandingPage({ onNav }: { onNav: (s: Screen) => void }) {
         </div>
       </section>
 
+      {/* Nosotros */}
+      <section className="py-24 bg-white" id="nosotros">
+        <div className="max-w-5xl mx-auto px-8 text-center">
+          <p className="text-violet-600 text-sm font-bold uppercase tracking-widest mb-3">Sobre nosotros</p>
+          <h2 className="text-5xl font-extrabold text-gray-900 mb-6" style={{ fontFamily: "Outfit, sans-serif" }}>Quiénes somos</h2>
+          <p className="text-gray-500 text-lg max-w-2xl mx-auto leading-relaxed">
+            TicketFlow nace como un proyecto universitario con el objetivo de simplificar la manera en que las personas descubren, reservan y disfrutan eventos en Colombia. Conectamos a organizadores y asistentes en una sola plataforma, simple, rápida y segura.
+          </p>
+          <div className="grid grid-cols-3 gap-8 mt-14">
+            {[
+              { icon: "🎯", t: "Nuestra misión", d: "Facilitar el acceso a experiencias culturales y de entretenimiento para todos." },
+              { icon: "🤝", t: "Nuestro compromiso", d: "Seguridad y transparencia en cada reserva, de principio a fin." },
+              { icon: "🚀", t: "Nuestra visión", d: "Ser la plataforma de referencia para la gestión de eventos en la región." },
+            ].map(s => (
+              <div key={s.t} className="flex flex-col items-center p-6 rounded-2xl border border-gray-100">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-4"
+                  style={{ background: `linear-gradient(135deg, ${PRIMARY}22, ${PRIMARY_L}33)` }}>
+                  {s.icon}
+                </div>
+                <h3 className="text-lg font-bold text-gray-800 mb-2">{s.t}</h3>
+                <p className="text-sm text-gray-500 text-center">{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Cómo funciona */}
-      <section className="py-24 bg-white">
+      <section className="py-24" style={{ background: "#F5F6FA" }}>
         <div className="max-w-5xl mx-auto px-8 text-center">
           <p className="text-violet-600 text-sm font-bold uppercase tracking-widest mb-3">Simple y rápido</p>
           <h2 className="text-5xl font-extrabold text-gray-900 mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>¿Cómo funciona?</h2>
@@ -93,7 +120,7 @@ export function LandingPage({ onNav }: { onNav: (s: Screen) => void }) {
       </section>
 
       {/* Featured Events */}
-      <section className="py-20" style={{ background: "#F5F6FA" }}>
+      <section className="py-20 bg-white" id="eventos">
         <div className="max-w-6xl mx-auto px-8">
           <div className="flex items-end justify-between mb-10">
             <div>
@@ -112,6 +139,7 @@ export function LandingPage({ onNav }: { onNav: (s: Screen) => void }) {
           </div>
         </div>
       </section>
+      
 
       {/* Footer */}
       <footer style={{ background: NAV }} className="pt-14 pb-8 text-gray-400 text-sm">
