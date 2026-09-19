@@ -44,7 +44,7 @@ export default function App() {
 
   if (screen === "landing")  return <LandingPage onNav={nav} />;
   if (screen === "login")    return <LoginPage onNav={nav} usuarios={usuarios} loginExitoso={loginExitoso} />;
-  if (screen === "register") return <RegisterPage onNav={nav} registrarUsuario={registrarUsuario} />;
+  if (screen === "register") return <RegisterPage onNav={nav} registrarUsuario={registrarUsuario} usuarios={usuarios} />;
 
   if (screen === "client-dashboard" || screen === "client-events" || screen === "client-event-detail"
     || screen === "client-reserve" || screen === "client-reservations" || screen === "client-profile") {

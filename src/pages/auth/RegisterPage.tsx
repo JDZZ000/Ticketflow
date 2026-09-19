@@ -6,7 +6,7 @@ import { Btn } from "../../components/Btn";
 import { Input } from "../../components/Input";
 
 // ─── REGISTER ─────────────────────────────────────────────────────────────────
-export function RegisterPage({ onNav, registrarUsuario }: { onNav: (s: Screen) => void; registrarUsuario: (nombre: string, email: string, pass: string, role: Role, id: string, direccion: string, ciudad: string, telefono: string) => void }) {
+export function RegisterPage({ onNav, registrarUsuario, usuarios }: { onNav: (s: Screen) => void; registrarUsuario: (nombre: string, email: string, pass: string, role: Role, id: string, direccion: string, ciudad: string, telefono: string) => void; usuarios: { email: string }[] }) {
   const [tipoUsuario, setTipoUsuario] = useState<"Cliente" | "Agente">("Cliente");
   const [form, setForm] = useState({ id: "", nombre: "", email: "", direccion: "", ciudad: "", telefono: "", pass: "", pass2: "" });
   const f = (k: keyof typeof form) => (v: string) => setForm(p => ({ ...p, [k]: v }));
@@ -20,6 +20,10 @@ export function RegisterPage({ onNav, registrarUsuario }: { onNav: (s: Screen) =
     setError("Las contraseñas no coinciden");
     return;
   }
+  if (usuarios.some(u => u.email === form.email)) {
+  setError("Ya existe una cuenta con ese correo");
+  return;
+}
   setError("");
   registrarUsuario(form.nombre, form.email, form.pass, tipoUsuario === "Cliente" ? "client" : "agent", form.id, form.direccion, form.ciudad, form.telefono);
   onNav("login");
