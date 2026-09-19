@@ -6,7 +6,7 @@ import { Btn } from "../../components/Btn";
 import { Input } from "../../components/Input";
 
 // ─── REGISTER ─────────────────────────────────────────────────────────────────
-export function RegisterPage({ onNav, registrarUsuario }: { onNav: (s: Screen) => void; registrarUsuario: (email: string, pass: string, role: Role) => void }) {
+export function RegisterPage({ onNav, registrarUsuario }: { onNav: (s: Screen) => void; registrarUsuario: (nombre: string, email: string, pass: string, role: Role, id: string, direccion: string, ciudad: string, telefono: string) => void }) {
   const [tipoUsuario, setTipoUsuario] = useState<"Cliente" | "Agente">("Cliente");
   const [form, setForm] = useState({ id: "", nombre: "", email: "", direccion: "", ciudad: "", telefono: "", pass: "", pass2: "" });
   const f = (k: keyof typeof form) => (v: string) => setForm(p => ({ ...p, [k]: v }));
@@ -21,7 +21,7 @@ export function RegisterPage({ onNav, registrarUsuario }: { onNav: (s: Screen) =
     return;
   }
   setError("");
-  registrarUsuario(form.email, form.pass, tipoUsuario === "Cliente" ? "client" : "agent");
+  registrarUsuario(form.nombre, form.email, form.pass, tipoUsuario === "Cliente" ? "client" : "agent", form.id, form.direccion, form.ciudad, form.telefono);
   onNav("login");
 }
   return (

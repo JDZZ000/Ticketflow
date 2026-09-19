@@ -7,11 +7,11 @@ import { StatCard } from "../../components/StatCard";
 import { PageHeader } from "../../layouts/PageHeader";
 
 // ─── CLIENT DASHBOARD ────────────────────────────────────────────────────────
-export function ClientDashboard({ onNav }: { onNav: (s: Screen) => void }) {
+export function ClientDashboard({ onNav, user }: { onNav: (s: Screen) => void; user: { nombre: string; email: string; role: string } | null }) {
   const myRes = RESERVAS.filter(r => r.cliente === "María González");
   return (
     <>
-      <PageHeader title="¡Bienvenida, María! 👋" subtitle="Aquí tienes un resumen de tu actividad" />
+      <PageHeader title={`¡Bienvenida, ${user?.nombre}! 👋`} subtitle="Aquí tienes un resumen de tu actividad" />
       <div className="grid grid-cols-4 gap-5 mb-8">
         <StatCard label="Eventos disponibles" value={EVENTOS.filter(e => e.estado === "En Boletería").length} icon="🎭" color="violet" />
         <StatCard label="Mis reservas" value={myRes.length} icon="🎫" color="blue" />

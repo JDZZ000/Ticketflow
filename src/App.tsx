@@ -19,10 +19,16 @@ import { AdminDashboard } from "./pages/admin/AdminDashboard";
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState<Screen>("landing");
-  const [usuarios, setUsuarios] = useState<{ email: string; pass: string; role: Role }[]>([]);
-  function registrarUsuario(email: string, pass: string, role: Role) {
-    setUsuarios(prev => [...prev, { email, pass, role }]);
+  const [usuarios, setUsuarios] = useState<{ nombre: string; email: string; pass: string; role: Role; id: string; direccion: string; ciudad: string; telefono: string }[]>([]);
+  const [usuarioActual, setUsuarioActual] = useState<{ nombre: string; email: string; role: Role; id: string; direccion: string; ciudad: string; telefono: string } | null>(null);
+  function registrarUsuario(nombre: string, email: string, pass: string, role: Role, id: string, direccion: string, ciudad: string, telefono: string) {
+  setUsuarios(prev => [...prev, { nombre, email, pass, role, id, direccion, ciudad, telefono }]);
   }
+  function loginExitoso(u: { nombre: string; email: string; role: Role; id: string; direccion: string; ciudad: string; telefono: string }) {
+  setUsuarioActual(u);
+  const destino = u.role === "agent" ? "agent-dashboard" : u.role === "admin" ? "admin-dashboard" : "client-dashboard";
+  setScreen(destino);
+}
   const [role, setRole] = useState<Role>("client");
 
   function nav(s: Screen, r?: Role) {
@@ -31,24 +37,25 @@ export default function App() {
   }
 
   const user =
-    role === "client"  ? { name: "María González", email: "maria@email.com" }
-    : role === "agent" ? { name: "Carlos Medina",  email: "carlos@agentes.com" }
-                       : { name: "Laura Ríos",      email: "laura@ticketflow.com" };
+  usuarioActual
+    ? { name: usuarioActual.nombre, email: usuarioActual.email }
+    : role === "agent" ? { name: "Carlos Medina", email: "carlos@agentes.com" }
+                        : { name: "Laura Ríos",   email: "laura@ticketflow.com" };
 
   if (screen === "landing")  return <LandingPage onNav={nav} />;
-  if (screen === "login")    return <LoginPage onNav={nav} usuarios={usuarios} />;
+  if (screen === "login")    return <LoginPage onNav={nav} usuarios={usuarios} loginExitoso={loginExitoso} />;
   if (screen === "register") return <RegisterPage onNav={nav} registrarUsuario={registrarUsuario} />;
 
   if (screen === "client-dashboard" || screen === "client-events" || screen === "client-event-detail"
     || screen === "client-reserve" || screen === "client-reservations" || screen === "client-profile") {
     return (
       <DashboardLayout role="client" screen={screen} onNav={nav} user={user}>
-        {screen === "client-dashboard"    && <ClientDashboard onNav={nav} />}
+        {screen === "client-dashboard"    && <ClientDashboard onNav={nav} user={usuarioActual} />}
         {screen === "client-events"       && <ClientEvents onNav={nav} />}
         {screen === "client-event-detail" && <EventDetail onNav={nav} />}
         {screen === "client-reserve"      && <ReservePage onNav={nav} />}
         {screen === "client-reservations" && <ClientReservations />}
-        {screen === "client-profile"      && <ProfilePage role="client" />}
+        {screen === "client-profile" && <ProfilePage role="client" user={usuarioActual} />}
       </DashboardLayout>
     );
   }
@@ -61,7 +68,7 @@ export default function App() {
         {screen === "agent-register-event"  && <AgentRegisterEvent onNav={nav} />}
         {screen === "agent-my-events"       && <AgentMyEvents onNav={nav} />}
         {screen === "agent-reservations"    && <AgentReservations />}
-        {screen === "agent-profile"         && <ProfilePage role="agent" />}
+        {screen === "agent-profile"  && <ProfilePage role="agent"  user={usuarioActual} />}
       </DashboardLayout>
     );
   }
@@ -69,7 +76,7 @@ export default function App() {
   return (
     <DashboardLayout role="admin" screen={screen} onNav={nav} user={user}>
       {screen === "admin-dashboard" && <AdminDashboard />}
-      {screen === "admin-profile"   && <ProfilePage role="admin" />}
+      {screen === "admin-profile"  && <ProfilePage role="admin"  user={usuarioActual} />}
     </DashboardLayout>
   );
 }
