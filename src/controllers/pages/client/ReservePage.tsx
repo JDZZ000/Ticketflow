@@ -1,11 +1,11 @@
 import { useState } from "react";
-import type { Screen } from "../../types";
-import { PRIMARY } from "../../utils/theme";
-import { fmtPrice, fmtDate, unsplash } from "../../utils/format";
-import { EVENTOS } from "../../data/mockData";
-import { Btn } from "../../components/Btn";
-import { Select } from "../../components/Select";
-import { Badge } from "../../components/Badge";
+import type { Screen } from "../../../models/types";
+import { PRIMARY } from "../../../utils/theme";
+import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
+import { EVENTOS } from "../../../models/data/mockData";
+import { Btn } from "../../../views/components/Btn";
+import { Select } from "../../../views/components/Select";
+import { Badge } from "../../../views/components/Badge";
 
 // ─── RESERVE ──────────────────────────────────────────────────────────────────
 export function ReservePage({ onNav }: { onNav: (s: Screen) => void }) {

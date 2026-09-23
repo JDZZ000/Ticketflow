@@ -1,10 +1,10 @@
 import { useState } from "react";
-import type { Screen } from "../../types";
-import { EVENTOS } from "../../data/mockData";
-import { Input } from "../../components/Input";
-import { Select } from "../../components/Select";
-import { EventCard } from "../../components/EventCard";
-import { PageHeader } from "../../layouts/PageHeader";
+import type { Screen } from "../../../models/types";
+import { EVENTOS } from "../../../models/data/mockData";
+import { Input } from "../../../views/components/Input";
+import { Select } from "../../../views/components/Select";
+import { EventCard } from "../../../views/components/EventCard";
+import { PageHeader } from "../../../views/layouts/PageHeader";
 
 // ─── CLIENT EVENTS ────────────────────────────────────────────────────────────
 export function ClientEvents({ onNav }: { onNav: (s: Screen) => void }) {

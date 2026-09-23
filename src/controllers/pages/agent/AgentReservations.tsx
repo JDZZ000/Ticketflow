@@ -1,9 +1,9 @@
 import { useState } from "react";
-import type { ReservaStatus } from "../../types";
-import { fmtPrice, fmtDate } from "../../utils/format";
-import { EVENTOS, RESERVAS } from "../../data/mockData";
-import { Badge } from "../../components/Badge";
-import { PageHeader } from "../../layouts/PageHeader";
+import type { ReservaStatus } from "../../../models/types";
+import { fmtPrice, fmtDate } from "../../../utils/format";
+import { EVENTOS, RESERVAS } from "../../../models/data/mockData";
+import { Badge } from "../../../views/components/Badge";
+import { PageHeader } from "../../../views/layouts/PageHeader";
 
 // ─── AGENT RESERVATIONS ───────────────────────────────────────────────────────
 export function AgentReservations() {

@@ -1,8 +1,8 @@
-import type { Role } from "../types";
-import { PRIMARY, PRIMARY_L, NAV } from "../utils/theme";
-import { RESERVAS } from "../data/mockData";
-import { Btn } from "../components/Btn";
-import { PageHeader } from "../layouts/PageHeader";
+import type { Role } from "../../models/types";
+import { PRIMARY, PRIMARY_L, NAV } from "../../utils/theme";
+import { RESERVAS } from "../../models/data/mockData";
+import { Btn } from "../../views/components/Btn";
+import { PageHeader } from "../../views/layouts/PageHeader";
 
 // ─── PROFILE PAGE ────────────────────────────────────────────────────────────
 export function ProfilePage({ role, user }: { role: Role; user: { nombre: string; email: string; id: string; direccion: string; ciudad: string; telefono: string } | null }) {

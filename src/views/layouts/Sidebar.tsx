@@ -1,5 +1,5 @@
-import type { Role, Screen } from "../types";
-import { NAV, PRIMARY, PRIMARY_L } from "../utils/theme";
+import type { Role, Screen } from "../../models/types";
+import { NAV, PRIMARY, PRIMARY_L } from "../../utils/theme";
 import { Logo } from "../components/Logo";
 
 // ─── Sidebar Nav ───────────────────────────────────────────────────────────────

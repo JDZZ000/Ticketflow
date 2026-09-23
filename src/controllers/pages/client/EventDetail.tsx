@@ -1,9 +1,9 @@
-import type { Screen } from "../../types";
-import { PRIMARY, PRIMARY_L } from "../../utils/theme";
-import { fmtPrice, fmtDate, unsplash } from "../../utils/format";
-import { EVENTOS } from "../../data/mockData";
-import { Btn } from "../../components/Btn";
-import { Badge } from "../../components/Badge";
+import type { Screen } from "../../../models/types";
+import { PRIMARY, PRIMARY_L } from "../../../utils/theme";
+import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
+import { EVENTOS } from "../../../models/data/mockData";
+import { Btn } from "../../../views/components/Btn";
+import { Badge } from "../../../views/components/Badge";
 
 // ─── EVENT DETAIL ─────────────────────────────────────────────────────────────
 export function EventDetail({ onNav }: { onNav: (s: Screen) => void }) {

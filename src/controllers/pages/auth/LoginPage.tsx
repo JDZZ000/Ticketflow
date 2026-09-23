@@ -1,11 +1,11 @@
 import { useState } from "react";
-import type { Screen, Role } from "../../types";
-import { PRIMARY, PRIMARY_L, ACCENT, ACCENT_BLUE, NAV } from "../../utils/theme";
-import { fmtPrice, fmtDate, unsplash } from "../../utils/format";
-import { EVENTOS } from "../../data/mockData";
-import { Logo } from "../../components/Logo";
-import { Btn } from "../../components/Btn";
-import { Input } from "../../components/Input";
+import type { Screen, Role } from "../../../models/types";
+import { PRIMARY, PRIMARY_L, ACCENT, ACCENT_BLUE, NAV } from "../../../utils/theme";
+import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
+import { EVENTOS } from "../../../models/data/mockData";
+import { Logo } from "../../../views/components/Logo";
+import { Btn } from "../../../views/components/Btn";
+import { Input } from "../../../views/components/Input";
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
 export function LoginPage({ onNav, usuarios, loginExitoso }: { onNav: (s: Screen, role?: Role) => void; usuarios: { nombre: string; email: string; pass: string; role: Role; id: string; direccion: string; ciudad: string; telefono: string }[]; loginExitoso: (u: { nombre: string; email: string; role: Role; id: string; direccion: string; ciudad: string; telefono: string }) => void }) {

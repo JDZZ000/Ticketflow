@@ -1,9 +1,9 @@
 import { useState } from "react";
-import type { Screen, Role } from "./types";
+import type { Screen, Role } from "../models/types";
 import { LandingPage } from "./pages/auth/LandingPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
-import { DashboardLayout } from "./layouts/DashboardLayout";
+import { DashboardLayout } from "../views/layouts/DashboardLayout";
 import { ClientDashboard } from "./pages/client/ClientDashboard";
 import { ClientEvents } from "./pages/client/ClientEvents";
 import { EventDetail } from "./pages/client/EventDetail";

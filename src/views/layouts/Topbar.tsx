@@ -1,5 +1,5 @@
-import type { Screen } from "../types";
-import { NAV, PRIMARY, PRIMARY_L } from "../utils/theme";
+import type { Screen } from "../../models/types";
+import { NAV, PRIMARY, PRIMARY_L } from "../../utils/theme";
 import { Logo } from "../components/Logo";
 
 // ─── Topbar Nav (horizontal — vista cliente) ──────────────────────────────────

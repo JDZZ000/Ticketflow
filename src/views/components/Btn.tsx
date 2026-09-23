@@ -1,4 +1,4 @@
-import { PRIMARY, PRIMARY_L } from "../utils/theme";
+import { PRIMARY, PRIMARY_L } from "../../utils/theme";
 
 export function Btn({ children, onClick, variant = "primary", size = "md", full = false, type = "button" }: {
   children: React.ReactNode; onClick?: () => void;

@@ -1,4 +1,4 @@
-import type { EventStatus, ReservaStatus } from "../types";
+import type { EventStatus, ReservaStatus } from "../models/types";
 
 export function statusColor(s: EventStatus | ReservaStatus) {
   const map: Record<string, string> = {

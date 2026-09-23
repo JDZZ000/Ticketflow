@@ -1,10 +1,10 @@
-import type { Screen } from "../../types";
-import { fmtPrice, fmtDate } from "../../utils/format";
-import { EVENTOS, RESERVAS } from "../../data/mockData";
-import { Badge } from "../../components/Badge";
-import { EventCard } from "../../components/EventCard";
-import { StatCard } from "../../components/StatCard";
-import { PageHeader } from "../../layouts/PageHeader";
+import type { Screen } from "../../../models/types";
+import { fmtPrice, fmtDate } from "../../../utils/format";
+import { EVENTOS, RESERVAS } from "../../../models/data/mockData";
+import { Badge } from "../../../views/components/Badge";
+import { EventCard } from "../../../views/components/EventCard";
+import { StatCard } from "../../../views/components/StatCard";
+import { PageHeader } from "../../../views/layouts/PageHeader";
 
 // ─── CLIENT DASHBOARD ────────────────────────────────────────────────────────
 export function ClientDashboard({ onNav, user }: { onNav: (s: Screen) => void; user: { nombre: string; email: string; role: string } | null }) {

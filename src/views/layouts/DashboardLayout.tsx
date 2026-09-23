@@ -1,4 +1,4 @@
-import type { Role, Screen } from "../types";
+import type { Role, Screen } from "../../models/types";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 

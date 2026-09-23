@@ -1,9 +1,9 @@
 import { useState } from "react";
-import type { Screen, Role } from "../../types";
-import { PRIMARY } from "../../utils/theme";
-import { Logo } from "../../components/Logo";
-import { Btn } from "../../components/Btn";
-import { Input } from "../../components/Input";
+import type { Screen, Role } from "../../../models/types";
+import { PRIMARY } from "../../../utils/theme";
+import { Logo } from "../../../views/components/Logo";
+import { Btn } from "../../../views/components/Btn";
+import { Input } from "../../../views/components/Input";
 
 // ─── REGISTER ─────────────────────────────────────────────────────────────────
 export function RegisterPage({ onNav, registrarUsuario, usuarios }: { onNav: (s: Screen) => void; registrarUsuario: (nombre: string, email: string, pass: string, role: Role, id: string, direccion: string, ciudad: string, telefono: string) => void; usuarios: { email: string }[] }) {

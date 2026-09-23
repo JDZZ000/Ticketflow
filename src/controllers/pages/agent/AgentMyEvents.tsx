@@ -1,9 +1,9 @@
-import type { Screen } from "../../types";
-import { fmtPrice, fmtDate, unsplash } from "../../utils/format";
-import { EVENTOS } from "../../data/mockData";
-import { Btn } from "../../components/Btn";
-import { Badge } from "../../components/Badge";
-import { PageHeader } from "../../layouts/PageHeader";
+import type { Screen } from "../../../models/types";
+import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
+import { EVENTOS } from "../../../models/data/mockData";
+import { Btn } from "../../../views/components/Btn";
+import { Badge } from "../../../views/components/Badge";
+import { PageHeader } from "../../../views/layouts/PageHeader";
 
 // ─── AGENT MY EVENTS ─────────────────────────────────────────────────────────
 export function AgentMyEvents({ onNav }: { onNav: (s: Screen) => void }) {

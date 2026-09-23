@@ -1,11 +1,11 @@
-import type { Screen } from "../../types";
-import { PRIMARY, PRIMARY_L, NAV } from "../../utils/theme";
-import { unsplash } from "../../utils/format";
-import { EVENTOS } from "../../data/mockData";
-import { Logo } from "../../components/Logo";
-import { SocialIcons } from "../../components/SocialIcons";
-import { Btn } from "../../components/Btn";
-import { EventCard } from "../../components/EventCard";
+import type { Screen } from "../../../models/types";
+import { PRIMARY, PRIMARY_L, NAV } from "../../../utils/theme";
+import { unsplash } from "../../../utils/format";
+import { EVENTOS } from "../../../models/data/mockData";
+import { Logo } from "../../../views/components/Logo";
+import { SocialIcons } from "../../../views/components/SocialIcons";
+import { Btn } from "../../../views/components/Btn";
+import { EventCard } from "../../../views/components/EventCard";
 
 // ─── LANDING PAGE ─────────────────────────────────────────────────────────────
 export function LandingPage({ onNav }: { onNav: (s: Screen) => void }) {

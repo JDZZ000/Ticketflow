@@ -1,4 +1,4 @@
-import { PRIMARY } from "../utils/theme";
+import { PRIMARY } from "../../utils/theme";
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: React.ReactNode }) {
   return (

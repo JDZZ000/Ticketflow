@@ -1,10 +1,10 @@
 import { useState } from "react";
-import type { Screen } from "../../types";
-import { PRIMARY } from "../../utils/theme";
-import { Btn } from "../../components/Btn";
-import { Input } from "../../components/Input";
-import { Select } from "../../components/Select";
-import { PageHeader } from "../../layouts/PageHeader";
+import type { Screen } from "../../../models/types";
+import { PRIMARY } from "../../../utils/theme";
+import { Btn } from "../../../views/components/Btn";
+import { Input } from "../../../views/components/Input";
+import { Select } from "../../../views/components/Select";
+import { PageHeader } from "../../../views/layouts/PageHeader";
 
 // ─── AGENT REGISTER EVENT ─────────────────────────────────────────────────────
 export function AgentRegisterEvent({ onNav }: { onNav: (s: Screen) => void }) {

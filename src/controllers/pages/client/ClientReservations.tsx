@@ -1,8 +1,8 @@
-import { fmtPrice, fmtDate, unsplash } from "../../utils/format";
-import { EVENTOS, RESERVAS } from "../../data/mockData";
-import { Badge } from "../../components/Badge";
-import { StatCard } from "../../components/StatCard";
-import { PageHeader } from "../../layouts/PageHeader";
+import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
+import { EVENTOS, RESERVAS } from "../../../models/data/mockData";
+import { Badge } from "../../../views/components/Badge";
+import { StatCard } from "../../../views/components/StatCard";
+import { PageHeader } from "../../../views/layouts/PageHeader";
 
 // ─── CLIENT RESERVATIONS ──────────────────────────────────────────────────────
 export function ClientReservations() {

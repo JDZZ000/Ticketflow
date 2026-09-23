@@ -1,4 +1,4 @@
-import { PRIMARY, ACCENT, BRAND_GRADIENT } from "../utils/theme";
+import { PRIMARY, ACCENT, BRAND_GRADIENT } from "../../utils/theme";
 
 // ─── Brand Logo ────────────────────────────────────────────────────────────────
 export function Logo({ size = "md", on = "dark" }: { size?: "sm" | "md" | "lg" | "xl"; on?: "dark" | "light" }) {
