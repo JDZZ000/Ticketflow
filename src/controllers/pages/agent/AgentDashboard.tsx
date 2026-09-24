@@ -12,13 +12,13 @@ export function AgentDashboard({ onNav }: { onNav: (s: Screen) => void }) {
     <>
       <PageHeader title="Dashboard Agente" subtitle="Gestiona tus eventos y reservas"
         actions={<Btn onClick={() => onNav("agent-register-event")}>➕ Nuevo evento</Btn>} />
-      <div className="grid grid-cols-4 gap-5 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         <StatCard label="Eventos registrados" value={EVENTOS.length} icon="🎭" color="violet" />
         <StatCard label="Eventos activos" value={EVENTOS.filter(e => e.estado === "En Boletería").length} icon="✅" color="emerald" />
         <StatCard label="Reservas recibidas" value={RESERVAS.length} icon="🎫" color="blue" />
         <StatCard label="Reservas pendientes" value={RESERVAS.filter(r => r.estado === "Reservada").length} icon="⏳" color="amber" />
       </div>
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
           <h3 className="text-xl font-extrabold text-gray-800 mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>Mis eventos recientes</h3>
           <div className="space-y-3">

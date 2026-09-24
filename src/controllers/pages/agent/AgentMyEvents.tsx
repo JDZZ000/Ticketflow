@@ -12,7 +12,8 @@ export function AgentMyEvents({ onNav }: { onNav: (s: Screen) => void }) {
       <PageHeader title="Mis Eventos" subtitle="Gestiona todos tus eventos registrados"
         actions={<Btn onClick={() => onNav("agent-register-event")}>➕ Nuevo evento</Btn>} />
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[700px]">
           <thead>
             <tr style={{ background: "#F5F6FA" }}>
               {["Código", "Evento", "Ciudad", "Fecha", "Precio", "Capacidad", "Estado", "Acciones"].map(h => (
@@ -49,6 +50,7 @@ export function AgentMyEvents({ onNav }: { onNav: (s: Screen) => void }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </>
   );

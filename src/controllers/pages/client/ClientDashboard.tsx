@@ -12,17 +12,17 @@ export function ClientDashboard({ onNav, user }: { onNav: (s: Screen) => void; u
   return (
     <>
       <PageHeader title={`¡Bienvenid@, ${user?.nombre}! 👋`} subtitle="Aquí tienes un resumen de tu actividad" />
-      <div className="grid grid-cols-4 gap-5 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         <StatCard label="Eventos disponibles" value={EVENTOS.filter(e => e.estado === "En Boletería").length} icon="🎭" color="violet" />
         <StatCard label="Mis reservas" value={myRes.length} icon="🎫" color="blue" />
         <StatCard label="Confirmadas" value={myRes.filter(r => r.estado === "Confirmada").length} icon="✅" color="emerald" />
         <StatCard label="Puntos acumulados" value="1,240" icon="⭐" color="amber" />
       </div>
 
-      <div className="grid grid-cols-4 gap-6 mb-8">
-        <div className="col-span-3">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+        <div className="lg:col-span-3">
           <h2 className="text-2xl font-extrabold text-gray-800 mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>Eventos destacados</h2>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {EVENTOS.filter(e => e.estado === "En Boletería").slice(0, 3).map(ev => (
               <EventCard key={ev.id} ev={ev} onView={() => onNav("client-event-detail")} />
             ))}

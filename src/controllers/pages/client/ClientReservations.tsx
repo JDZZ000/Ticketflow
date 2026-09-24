@@ -10,7 +10,7 @@ export function ClientReservations() {
   return (
     <>
       <PageHeader title="Mis Reservas" subtitle="Historial completo de tus reservas" />
-      <div className="grid grid-cols-4 gap-5 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         <StatCard label="Total reservas" value={myRes.length} icon="🎫" color="violet" />
         <StatCard label="Confirmadas" value={myRes.filter(r => r.estado === "Confirmada").length} icon="✅" color="emerald" />
         <StatCard label="Pendientes" value={myRes.filter(r => r.estado === "Reservada").length} icon="⏳" color="amber" />
@@ -20,9 +20,9 @@ export function ClientReservations() {
         {myRes.map(r => {
           const ev = EVENTOS.find(e => e.id === r.eventoId)!;
           return (
-            <div key={r.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex gap-5 items-center hover:shadow-md transition">
-              <img src={unsplash(ev.imagen, 100, 70)} alt={ev.nombre} className="rounded-xl w-20 h-14 object-cover flex-shrink-0" />
-              <div className="flex-1 grid grid-cols-5 gap-3 items-center">
+            <div key={r.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col sm:flex-row gap-4 sm:gap-5 sm:items-center hover:shadow-md transition">
+              <img src={unsplash(ev.imagen, 100, 70)} alt={ev.nombre} className="rounded-xl w-full h-32 sm:w-20 sm:h-14 object-cover flex-shrink-0" />
+              <div className="flex-1 grid grid-cols-2 sm:grid-cols-5 gap-3 items-center">
                 <div className="col-span-2">
                   <p className="font-semibold text-gray-800 text-sm">{ev.nombre}</p>
                   <p className="text-xs text-gray-400 mt-0.5 font-mono">#{r.id}</p>

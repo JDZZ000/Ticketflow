@@ -3,9 +3,10 @@ import { NAV, PRIMARY, PRIMARY_L } from "../../utils/theme";
 import { Logo } from "../components/Logo";
 
 // ─── Sidebar Nav ───────────────────────────────────────────────────────────────
-export function Sidebar({ role, current, onNav, user }: {
+export function Sidebar({ role, current, onNav, user, open = false, onClose }: {
   role: Role; current: Screen; onNav: (s: Screen) => void;
   user: { name: string; email: string };
+  open?: boolean; onClose?: () => void;
 }) {
   const links: { label: string; screen: Screen; icon: string }[] =
     role === "client" ? [
@@ -25,10 +26,32 @@ export function Sidebar({ role, current, onNav, user }: {
     ];
 
   return (
-    <aside className="w-64 flex-shrink-0 flex flex-col min-h-screen" style={{ background: NAV }}>
-      <div className="px-6 py-6 border-b border-white/10">
-        <Logo size="sm" on="dark" />
-      </div>
+    <>
+      {/* Overlay para cerrar el menú al tocar fuera (solo móvil) */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`w-64 flex-shrink-0 flex flex-col min-h-screen fixed inset-y-0 left-0 z-50 transition-transform duration-200 ease-out lg:static lg:translate-x-0 ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+        style={{ background: NAV }}
+      >
+        <div className="px-6 py-6 border-b border-white/10 flex items-center justify-between">
+          <Logo size="sm" on="dark" />
+          <button
+            onClick={onClose}
+            className="lg:hidden text-gray-400 hover:text-white text-xl leading-none cursor-pointer"
+            aria-label="Cerrar menú"
+          >
+            ✕
+          </button>
+        </div>
       <div className="px-4 py-4 border-b border-white/10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
@@ -49,7 +72,7 @@ export function Sidebar({ role, current, onNav, user }: {
         {links.map(l => (
           <button
             key={l.screen}
-            onClick={() => onNav(l.screen)}
+            onClick={() => { onNav(l.screen); onClose?.(); }}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 text-left cursor-pointer ${
               current === l.screen
                 ? "text-white"
@@ -70,7 +93,8 @@ export function Sidebar({ role, current, onNav, user }: {
           <span>🚪</span> Cerrar sesión
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
 

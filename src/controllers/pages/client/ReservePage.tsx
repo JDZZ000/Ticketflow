@@ -33,13 +33,13 @@ export function ReservePage({ onNav }: { onNav: (s: Screen) => void }) {
         ← Volver al evento
       </button>
       <h1 className="text-4xl font-extrabold mb-6 leading-tight" style={{ fontFamily: "Outfit, sans-serif", background: `linear-gradient(135deg, #1A1B2E, ${PRIMARY})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Realizar reserva</h1>
-      <div className="max-w-5xl grid grid-cols-3 gap-6 items-start">
-        <div className="col-span-2 space-y-5">
+      <div className="max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2 space-y-5">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Resumen del evento</h2>
             <div className="flex gap-4 items-start">
               <img src={unsplash(ev.imagen, 160, 110)} alt={ev.nombre} className="rounded-xl w-32 h-20 object-cover flex-shrink-0" />
-              <div className="flex-1 grid grid-cols-3 gap-3 text-sm">
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                 <div><p className="text-gray-400 text-xs">Evento</p><p className="font-semibold text-gray-800">{ev.nombre}</p></div>
                 <div><p className="text-gray-400 text-xs">Teatro</p><p className="font-semibold text-gray-800">{ev.teatro}</p></div>
                 <div><p className="text-gray-400 text-xs">Fecha</p><p className="font-semibold text-gray-800">{fmtDate(ev.fecha)}</p></div>
@@ -51,7 +51,7 @@ export function ReservePage({ onNav }: { onNav: (s: Screen) => void }) {
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Detalles de la reserva</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Select label="Cantidad de entradas" value={cantidad} onChange={setCantidad} options={["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]} />
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">Método de entrega</label>

@@ -51,7 +51,7 @@ export function RegisterPage({ onNav, registrarUsuario, usuarios }: { onNav: (s:
           <p className="text-xs text-gray-400 mt-2">Los administradores son creados directamente por el sistema.</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <Input label="N.° de identificación" value={form.id} onChange={f("id")} placeholder="1234567890" />
           <Input label="Nombre completo" value={form.nombre} onChange={f("nombre")} placeholder="María González" required />
           <Input label="Correo electrónico" type="email" value={form.email} onChange={f("email")} placeholder="correo@ejemplo.com" required />

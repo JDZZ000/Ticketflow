@@ -26,7 +26,7 @@ export function ClientEvents({ onNav }: { onNav: (s: Screen) => void }) {
     <>
       <PageHeader title="Eventos disponibles" subtitle="Explora todos los eventos y espectáculos" />
       <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm mb-6">
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="col-span-2">
             <Input label="Buscar evento o teatro" value={buscar} onChange={setBuscar} placeholder="Buscar..." />
           </div>
@@ -34,12 +34,12 @@ export function ClientEvents({ onNav }: { onNav: (s: Screen) => void }) {
           <Select label="Estado" value={estado} onChange={setEstado} options={estados} />
         </div>
       </div>
-      <div className="grid grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {filtered.map(ev => (
           <EventCard key={ev.id} ev={ev} onView={() => onNav("client-event-detail")} />
         ))}
         {filtered.length === 0 && (
-          <div className="col-span-4 py-16 text-center text-gray-400">
+          <div className="col-span-full py-16 text-center text-gray-400">
             <p className="text-4xl mb-3">🎭</p>
             <p className="font-medium">No se encontraron eventos con los filtros seleccionados</p>
           </div>

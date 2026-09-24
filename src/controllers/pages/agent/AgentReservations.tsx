@@ -15,7 +15,8 @@ export function AgentReservations() {
     <>
       <PageHeader title="Gestión de Reservas" subtitle="Administra las reservas recibidas en tus eventos" />
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[700px]">
           <thead>
             <tr style={{ background: "#F5F6FA" }}>
               {["ID", "Cliente", "Evento", "Fecha reserva", "Entradas", "Total", "Estado", "Observaciones", "Acción"].map(h => (
@@ -50,6 +51,7 @@ export function AgentReservations() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </>
   );

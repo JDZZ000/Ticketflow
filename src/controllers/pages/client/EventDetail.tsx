@@ -22,11 +22,11 @@ export function EventDetail({ onNav }: { onNav: (s: Screen) => void }) {
             <h1 className="text-3xl font-extrabold text-white mt-2" style={{ fontFamily: "Outfit, sans-serif" }}>{ev.nombre}</h1>
           </div>
         </div>
-        <div className="p-8 grid grid-cols-3 gap-8">
+        <div className="p-5 sm:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="col-span-2">
             <h2 className="text-lg font-bold text-gray-800 mb-3" style={{ fontFamily: "Outfit, sans-serif" }}>Descripción</h2>
             <p className="text-gray-600 leading-relaxed mb-6">{ev.descripcion}</p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 ["🎭 Teatro", ev.teatro],
                 ["📍 Ciudad", ev.ciudad + ", " + ev.pais],

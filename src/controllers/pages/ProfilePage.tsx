@@ -24,8 +24,8 @@ const data = {
   return (
     <>
       <PageHeader title="Mi Perfil" subtitle="Información personal y de cuenta" />
-      <div className="max-w-5xl grid grid-cols-3 gap-6 items-start">
-        <div className="col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="h-24 relative" style={{ background: `linear-gradient(135deg, ${NAV}, ${PRIMARY})` }}>
             <div className="absolute -bottom-8 left-8">
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl border-4 border-white"
@@ -34,10 +34,10 @@ const data = {
               </div>
             </div>
           </div>
-          <div className="pt-12 px-8 pb-8">
+          <div className="pt-10 px-5 pb-8 sm:pt-12 sm:px-8">
             <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Outfit, sans-serif" }}>{data.nombre}</h2>
             <p className="text-sm text-gray-500 mb-6">{data.email}</p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 ["🪪 N.° Identificación", data.id],
                 ["📧 Correo electrónico", data.email],

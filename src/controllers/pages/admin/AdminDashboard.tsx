@@ -63,7 +63,7 @@ export function AdminDashboard() {
   return (
     <>
       <PageHeader title="Panel Administrativo" subtitle="Estadísticas y reportes de la plataforma" />
-      <div className="grid grid-cols-5 gap-5 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5 mb-8">
         <StatCard label="Clientes registrados" value="1,284" icon="👤" color="violet" />
         <StatCard label="Agentes registrados" value="47" icon="🎭" color="blue" />
         <StatCard label="Administradores" value="5" icon="🛡️" color="rose" />
@@ -83,7 +83,7 @@ export function AdminDashboard() {
 
       {tab === "comercial" && (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <h3 className="text-lg font-extrabold text-gray-800 mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>Ingresos totales por mes — 2026</h3>
               <p className="text-xs text-gray-400 mb-4">Suma de reservas confirmadas</p>
@@ -111,7 +111,7 @@ export function AdminDashboard() {
               </ResponsiveContainer>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <h3 className="text-lg font-extrabold text-gray-800 mb-1" style={{ fontFamily: "Outfit, sans-serif" }}>Reservas totales por mes — 2026</h3>
               <p className="text-xs text-gray-400 mb-4">Volumen mensual de reservas en la plataforma</p>
@@ -154,7 +154,7 @@ export function AdminDashboard() {
 
       {tab === "cobertura" && (
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <h3 className="text-xl font-extrabold text-gray-800 mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>Eventos por ciudad</h3>
               <ResponsiveContainer width="100%" height={250}>
@@ -225,7 +225,7 @@ export function AdminDashboard() {
               </tbody>
             </table>
           </div>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <h3 className="text-xl font-extrabold text-gray-800 mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>Reservas canceladas</h3>
               {RESERVAS.filter(r => r.estado === "Cancelada").map(r => {
