@@ -1,5 +1,7 @@
 import { useState } from "react";
 import type { Screen, Role } from "../models/types";
+import type { Reserva, ReservaStatus } from "../models/types";
+import { RESERVAS } from "../models/data/mockData";
 import { LandingPage } from "./pages/auth/LandingPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
@@ -19,56 +21,201 @@ import { AdminDashboard } from "./pages/admin/AdminDashboard";
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState<Screen>("landing");
-  const [usuarios, setUsuarios] = useState<{ nombre: string; email: string; pass: string; role: Role; id: string; direccion: string; ciudad: string; telefono: string }[]>([]);
-  const [usuarioActual, setUsuarioActual] = useState<{ nombre: string; email: string; role: Role; id: string; direccion: string; ciudad: string; telefono: string } | null>(null);
-  function registrarUsuario(nombre: string, email: string, pass: string, role: Role, id: string, direccion: string, ciudad: string, telefono: string) {
-  setUsuarios(prev => [...prev, { nombre, email, pass, role, id, direccion, ciudad, telefono }]);
+  const [usuarios, setUsuarios] = useState<
+    {
+      nombre: string;
+      email: string;
+      pass: string;
+      role: Role;
+      id: string;
+      direccion: string;
+      ciudad: string;
+      telefono: string;
+    }[]
+  >([]);
+  const [usuarioActual, setUsuarioActual] = useState<{
+    nombre: string;
+    email: string;
+    role: Role;
+    id: string;
+    direccion: string;
+    ciudad: string;
+    telefono: string;
+  } | null>(null);
+  const [reservas, setReservas] = useState<Reserva[]>(RESERVAS);
+  const [eventoSeleccionadoId, setEventoSeleccionadoId] = useState<
+    number | null
+  >(null);
+  function registrarUsuario(
+    nombre: string,
+    email: string,
+    pass: string,
+    role: Role,
+    id: string,
+    direccion: string,
+    ciudad: string,
+    telefono: string,
+  ) {
+    setUsuarios((prev) => [
+      ...prev,
+      { nombre, email, pass, role, id, direccion, ciudad, telefono },
+    ]);
   }
-  function loginExitoso(u: { nombre: string; email: string; role: Role; id: string; direccion: string; ciudad: string; telefono: string }) {
-  setUsuarioActual(u);
-  const destino = u.role === "agent" ? "agent-dashboard" : u.role === "admin" ? "admin-dashboard" : "client-dashboard";
-  setScreen(destino);
-}
+  function actualizarPerfil(
+    email: string,
+    id: string,
+    direccion: string,
+    ciudad: string,
+    telefono: string,
+  ) {
+    setUsuarios((prev) =>
+      prev.map((u) =>
+        u.email === email ? { ...u, id, direccion, ciudad, telefono } : u,
+      ),
+    );
+    setUsuarioActual((prev) =>
+      prev && prev.email === email
+        ? { ...prev, id, direccion, ciudad, telefono }
+        : prev,
+    );
+  }
+  function crearReserva(
+    eventoId: number,
+    entradas: number,
+    total: number,
+    observaciones: string,
+  ) {
+    const nuevoId = Math.max(0, ...reservas.map((r) => r.id)) + 1;
+    const nueva: Reserva = {
+      id: nuevoId,
+      eventoId,
+      cliente: usuarioActual?.nombre ?? "Invitado",
+      fechaReserva: new Date().toISOString().slice(0, 10),
+      entradas,
+      total,
+      estado: "Reservada",
+      observaciones,
+    };
+    setReservas((prev) => [...prev, nueva]);
+  }
+
+  function actualizarEstadoReserva(id: number, estado: ReservaStatus) {
+    setReservas((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, estado } : r)),
+    );
+  }
+  function loginExitoso(u: {
+    nombre: string;
+    email: string;
+    role: Role;
+    id: string;
+    direccion: string;
+    ciudad: string;
+    telefono: string;
+  }) {
+    setUsuarioActual(u);
+    const destino =
+      u.role === "agent"
+        ? "agent-dashboard"
+        : u.role === "admin"
+          ? "admin-dashboard"
+          : "client-dashboard";
+    setScreen(destino);
+  }
   const [role, setRole] = useState<Role>("client");
 
-  function nav(s: Screen, r?: Role) {
+  function nav(s: Screen, r?: Role, eventId?: number) {
     if (r) setRole(r);
+    if (eventId !== undefined) setEventoSeleccionadoId(eventId);
     setScreen(s);
   }
 
-  const user =
-  usuarioActual
+  const user = usuarioActual
     ? { name: usuarioActual.nombre, email: usuarioActual.email }
-    : role === "agent" ? { name: "Carlos Medina", email: "carlos@agentes.com" }
-                        : { name: "Laura Ríos",   email: "laura@ticketflow.com" };
+    : role === "agent"
+      ? { name: "Carlos Medina", email: "carlos@agentes.com" }
+      : { name: "Laura Ríos", email: "laura@ticketflow.com" };
 
-  if (screen === "landing")  return <LandingPage onNav={nav} />;
-  if (screen === "login")    return <LoginPage onNav={nav} usuarios={usuarios} loginExitoso={loginExitoso} />;
-  if (screen === "register") return <RegisterPage onNav={nav} registrarUsuario={registrarUsuario} usuarios={usuarios} />;
+  if (screen === "landing") return <LandingPage onNav={nav} />;
+  if (screen === "login")
+    return (
+      <LoginPage onNav={nav} usuarios={usuarios} loginExitoso={loginExitoso} />
+    );
+  if (screen === "register")
+    return (
+      <RegisterPage
+        onNav={nav}
+        registrarUsuario={registrarUsuario}
+        usuarios={usuarios}
+      />
+    );
 
-  if (screen === "client-dashboard" || screen === "client-events" || screen === "client-event-detail"
-    || screen === "client-reserve" || screen === "client-reservations" || screen === "client-profile") {
+  if (
+    screen === "client-dashboard" ||
+    screen === "client-events" ||
+    screen === "client-event-detail" ||
+    screen === "client-reserve" ||
+    screen === "client-reservations" ||
+    screen === "client-profile"
+  ) {
     return (
       <DashboardLayout role="client" screen={screen} onNav={nav} user={user}>
-        {screen === "client-dashboard"    && <ClientDashboard onNav={nav} user={usuarioActual} />}
-        {screen === "client-events"       && <ClientEvents onNav={nav} />}
-        {screen === "client-event-detail" && <EventDetail onNav={nav} />}
-        {screen === "client-reserve"      && <ReservePage onNav={nav} />}
-        {screen === "client-reservations" && <ClientReservations />}
-        {screen === "client-profile" && <ProfilePage role="client" user={usuarioActual} />}
+        {screen === "client-dashboard" && (
+          <ClientDashboard
+            onNav={nav}
+            user={usuarioActual}
+            reservas={reservas}
+          />
+        )}
+        {screen === "client-events" && <ClientEvents onNav={nav} />}
+        {screen === "client-event-detail" && (
+          <EventDetail onNav={nav} eventoId={eventoSeleccionadoId} />
+        )}
+        {screen === "client-reserve" && (
+          <ReservePage
+            onNav={nav}
+            eventoId={eventoSeleccionadoId}
+            crearReserva={crearReserva}
+          />
+        )}
+        {screen === "client-reservations" && (
+          <ClientReservations user={usuarioActual} reservas={reservas} />
+        )}
+        {screen === "client-profile" && (
+          <ProfilePage
+            role="client"
+            user={usuarioActual}
+            reservas={reservas}
+            actualizarPerfil={actualizarPerfil}
+          />
+        )}
       </DashboardLayout>
     );
   }
 
-  if (screen === "agent-dashboard" || screen === "agent-register-event" || screen === "agent-my-events"
-    || screen === "agent-reservations" || screen === "agent-profile") {
+  if (
+    screen === "agent-dashboard" ||
+    screen === "agent-register-event" ||
+    screen === "agent-my-events" ||
+    screen === "agent-reservations" ||
+    screen === "agent-profile"
+  ) {
     return (
       <DashboardLayout role="agent" screen={screen} onNav={nav} user={user}>
-        {screen === "agent-dashboard"       && <AgentDashboard onNav={nav} />}
-        {screen === "agent-register-event"  && <AgentRegisterEvent onNav={nav} />}
-        {screen === "agent-my-events"       && <AgentMyEvents onNav={nav} />}
-        {screen === "agent-reservations"    && <AgentReservations />}
-        {screen === "agent-profile"  && <ProfilePage role="agent"  user={usuarioActual} />}
+        {screen === "agent-dashboard" && <AgentDashboard onNav={nav} />}
+        {screen === "agent-register-event" && (
+          <AgentRegisterEvent onNav={nav} />
+        )}
+        {screen === "agent-my-events" && <AgentMyEvents onNav={nav} />}
+        {screen === "agent-reservations" && <AgentReservations />}
+        {screen === "agent-profile" && (
+          <ProfilePage
+            role="agent"
+            user={usuarioActual}
+            reservas={reservas}
+            actualizarPerfil={actualizarPerfil}
+          />
+        )}
       </DashboardLayout>
     );
   }
@@ -76,7 +223,14 @@ export default function App() {
   return (
     <DashboardLayout role="admin" screen={screen} onNav={nav} user={user}>
       {screen === "admin-dashboard" && <AdminDashboard />}
-      {screen === "admin-profile"  && <ProfilePage role="admin"  user={usuarioActual} />}
+      {screen === "admin-profile" && (
+        <ProfilePage
+          role="admin"
+          user={usuarioActual}
+          reservas={reservas}
+          actualizarPerfil={actualizarPerfil}
+        />
+      )}
     </DashboardLayout>
   );
 }
