@@ -1,7 +1,6 @@
-import type { Screen, Role } from "../../../models/types";
+import type { Screen, Role, Evento } from "../../../models/types";
 import { PRIMARY, PRIMARY_L } from "../../../utils/theme";
 import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
-import { EVENTOS } from "../../../models/data/mockData";
 import { Btn } from "../../../views/components/Btn";
 import { Badge } from "../../../views/components/Badge";
 
@@ -9,11 +8,13 @@ import { Badge } from "../../../views/components/Badge";
 export function EventDetail({
   onNav,
   eventoId,
+  eventos,
 }: {
   onNav: (s: Screen, r?: Role, eventId?: number) => void;
   eventoId: number | null;
+  eventos: Evento[];
 }) {
-  const ev = EVENTOS.find((e) => e.id === eventoId) ?? EVENTOS[0];
+  const ev = eventos.find((e) => e.id === eventoId) ?? eventos[0];
   return (
     <>
       <button

@@ -1,6 +1,10 @@
-import type { Screen, Role, ReservaStatus } from "../../../models/types";
+import type {
+  Screen,
+  Role,
+  ReservaStatus,
+  Evento,
+} from "../../../models/types";
 import { fmtPrice, fmtDate } from "../../../utils/format";
-import { EVENTOS } from "../../../models/data/mockData";
 import { Badge } from "../../../views/components/Badge";
 import { EventCard } from "../../../views/components/EventCard";
 import { StatCard } from "../../../views/components/StatCard";
@@ -11,6 +15,7 @@ export function ClientDashboard({
   onNav,
   user,
   reservas,
+  eventos,
 }: {
   onNav: (s: Screen, r?: Role, eventId?: number) => void;
   user: { nombre: string; email: string; role: string } | null;
@@ -24,8 +29,11 @@ export function ClientDashboard({
     estado: ReservaStatus;
     observaciones: string;
   }[];
+  eventos: Evento[];
 }) {
-  const myRes = reservas.filter((r) => r.cliente === user?.nombre);
+  const myRes = reservas
+    .filter((r) => r.cliente === user?.nombre)
+    .filter((r) => eventos.some((e) => e.id === r.eventoId));
   return (
     <>
       <PageHeader
@@ -35,7 +43,7 @@ export function ClientDashboard({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         <StatCard
           label="Eventos disponibles"
-          value={EVENTOS.filter((e) => e.estado === "En Boletería").length}
+          value={eventos.filter((e) => e.estado === "En Boletería").length}
           icon="🎭"
           color="violet"
         />
@@ -63,7 +71,8 @@ export function ClientDashboard({
             Eventos destacados
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {EVENTOS.filter((e) => e.estado === "En Boletería")
+            {eventos
+              .filter((e) => e.estado === "En Boletería")
               .slice(0, 3)
               .map((ev) => (
                 <EventCard
@@ -83,7 +92,7 @@ export function ClientDashboard({
           </h2>
           <div className="space-y-3">
             {myRes.slice(0, 3).map((r) => {
-              const ev = EVENTOS.find((e) => e.id === r.eventoId)!;
+              const ev = eventos.find((e) => e.id === r.eventoId)!;
               return (
                 <div
                   key={r.id}

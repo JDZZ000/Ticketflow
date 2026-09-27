@@ -1,8 +1,7 @@
 import { useState } from "react";
-import type { Screen, Role } from "../../../models/types";
+import type { Screen, Role, Evento } from "../../../models/types";
 import { PRIMARY } from "../../../utils/theme";
 import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
-import { EVENTOS } from "../../../models/data/mockData";
 import { Btn } from "../../../views/components/Btn";
 import { Select } from "../../../views/components/Select";
 import { Badge } from "../../../views/components/Badge";
@@ -11,10 +10,12 @@ import { Badge } from "../../../views/components/Badge";
 export function ReservePage({
   onNav,
   eventoId,
+  eventos,
   crearReserva,
 }: {
   onNav: (s: Screen, r?: Role, eventId?: number) => void;
   eventoId: number | null;
+  eventos: Evento[];
   crearReserva: (
     eventoId: number,
     entradas: number,
@@ -22,7 +23,7 @@ export function ReservePage({
     observaciones: string,
   ) => void;
 }) {
-  const ev = EVENTOS.find((e) => e.id === eventoId) ?? EVENTOS[0];
+  const ev = eventos.find((e) => e.id === eventoId) ?? eventos[0];
   const [cantidad, setCantidad] = useState("2");
   const [obs, setObs] = useState("");
   const [done, setDone] = useState(false);

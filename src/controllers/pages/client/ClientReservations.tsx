@@ -1,6 +1,5 @@
-import type { Reserva } from "../../../models/types";
+import type { Reserva, Evento } from "../../../models/types";
 import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
-import { EVENTOS, RESERVAS } from "../../../models/data/mockData";
 import { Badge } from "../../../views/components/Badge";
 import { StatCard } from "../../../views/components/StatCard";
 import { PageHeader } from "../../../views/layouts/PageHeader";
@@ -9,11 +8,15 @@ import { PageHeader } from "../../../views/layouts/PageHeader";
 export function ClientReservations({
   user,
   reservas,
+  eventos,
 }: {
   user: { nombre: string } | null;
   reservas: Reserva[];
+  eventos: Evento[];
 }) {
-  const myRes = reservas.filter((r) => r.cliente === user?.nombre);
+  const myRes = reservas
+    .filter((r) => r.cliente === user?.nombre)
+    .filter((r) => eventos.some((e) => e.id === r.eventoId));
   return (
     <>
       <PageHeader
@@ -52,7 +55,7 @@ export function ClientReservations({
       </div>
       <div className="space-y-4">
         {myRes.map((r) => {
-          const ev = EVENTOS.find((e) => e.id === r.eventoId)!;
+          const ev = eventos.find((e) => e.id === r.eventoId)!;
           return (
             <div
               key={r.id}

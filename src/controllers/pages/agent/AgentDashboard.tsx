@@ -1,33 +1,81 @@
-import type { Screen } from "../../../models/types";
+import type { Screen, Role, Evento, Reserva } from "../../../models/types";
 import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
-import { EVENTOS, RESERVAS } from "../../../models/data/mockData";
 import { Btn } from "../../../views/components/Btn";
 import { Badge } from "../../../views/components/Badge";
 import { StatCard } from "../../../views/components/StatCard";
 import { PageHeader } from "../../../views/layouts/PageHeader";
 
 // ─── AGENT DASHBOARD ─────────────────────────────────────────────────────────
-export function AgentDashboard({ onNav }: { onNav: (s: Screen) => void }) {
+export function AgentDashboard({
+  onNav,
+  eventos,
+  reservas,
+}: {
+  onNav: (s: Screen, r?: Role, eventId?: number | null) => void;
+  eventos: Evento[];
+  reservas: Reserva[];
+}) {
+  const reservasValidas = reservas.filter((r) =>
+    eventos.some((e) => e.id === r.eventoId),
+  );
   return (
     <>
-      <PageHeader title="Dashboard Agente" subtitle="Gestiona tus eventos y reservas"
-        actions={<Btn onClick={() => onNav("agent-register-event")}>➕ Nuevo evento</Btn>} />
+      <PageHeader
+        title="Dashboard Agente"
+        subtitle="Gestiona tus eventos y reservas"
+      />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        <StatCard label="Eventos registrados" value={EVENTOS.length} icon="🎭" color="violet" />
-        <StatCard label="Eventos activos" value={EVENTOS.filter(e => e.estado === "En Boletería").length} icon="✅" color="emerald" />
-        <StatCard label="Reservas recibidas" value={RESERVAS.length} icon="🎫" color="blue" />
-        <StatCard label="Reservas pendientes" value={RESERVAS.filter(r => r.estado === "Reservada").length} icon="⏳" color="amber" />
+        <StatCard
+          label="Eventos registrados"
+          value={eventos.length}
+          icon="🎭"
+          color="violet"
+        />
+        <StatCard
+          label="Eventos activos"
+          value={eventos.filter((e) => e.estado === "En Boletería").length}
+          icon="✅"
+          color="emerald"
+        />
+        <StatCard
+          label="Reservas recibidas"
+          value={reservasValidas.length}
+          icon="🎫"
+          color="blue"
+        />
+        <StatCard
+          label="Reservas pendientes"
+          value={reservasValidas.filter((r) => r.estado === "Reservada").length}
+          icon="⏳"
+          color="amber"
+        />
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <h3 className="text-xl font-extrabold text-gray-800 mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>Mis eventos recientes</h3>
+          <h3
+            className="text-xl font-extrabold text-gray-800 mb-4"
+            style={{ fontFamily: "Outfit, sans-serif" }}
+          >
+            Mis eventos recientes
+          </h3>
           <div className="space-y-3">
-            {EVENTOS.slice(0, 4).map(ev => (
-              <div key={ev.id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
-                <img src={unsplash(ev.imagen, 60, 40)} alt={ev.nombre} className="rounded-lg w-12 h-8 object-cover flex-shrink-0" />
+            {eventos.slice(0, 4).map((ev) => (
+              <div
+                key={ev.id}
+                className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0"
+              >
+                <img
+                  src={unsplash(ev.imagen, 60, 40)}
+                  alt={ev.nombre}
+                  className="rounded-lg w-12 h-8 object-cover flex-shrink-0"
+                />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{ev.nombre}</p>
-                  <p className="text-xs text-gray-400">{ev.ciudad} · {fmtDate(ev.fecha)}</p>
+                  <p className="text-sm font-medium text-gray-800 truncate">
+                    {ev.nombre}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {ev.ciudad} · {fmtDate(ev.fecha)}
+                  </p>
                 </div>
                 <Badge status={ev.estado} />
               </div>
@@ -35,18 +83,30 @@ export function AgentDashboard({ onNav }: { onNav: (s: Screen) => void }) {
           </div>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <h3 className="text-xl font-extrabold text-gray-800 mb-4" style={{ fontFamily: "Outfit, sans-serif" }}>Últimas reservas</h3>
+          <h3
+            className="text-xl font-extrabold text-gray-800 mb-4"
+            style={{ fontFamily: "Outfit, sans-serif" }}
+          >
+            Últimas reservas
+          </h3>
           <div className="space-y-3">
-            {RESERVAS.slice(0, 4).map(r => {
-              const ev = EVENTOS.find(e => e.id === r.eventoId)!;
+            {reservasValidas.slice(0, 4).map((r) => {
+              const ev = eventos.find((e) => e.id === r.eventoId)!;
               return (
-                <div key={r.id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+                <div
+                  key={r.id}
+                  className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0"
+                >
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">{r.cliente}</p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {r.cliente}
+                    </p>
                     <p className="text-xs text-gray-400">{ev.nombre}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-violet-700">{fmtPrice(r.total)}</p>
+                    <p className="text-sm font-bold text-violet-700">
+                      {fmtPrice(r.total)}
+                    </p>
                     <Badge status={r.estado} />
                   </div>
                 </div>
@@ -58,4 +118,3 @@ export function AgentDashboard({ onNav }: { onNav: (s: Screen) => void }) {
     </>
   );
 }
-
