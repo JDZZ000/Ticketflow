@@ -32,7 +32,18 @@ export default function App() {
       ciudad: string;
       telefono: string;
     }[]
-  >([]);
+  >([
+    {
+      nombre: "Admin User",
+      email: "admin@ticketflow.com",
+      pass: "admin123",
+      role: "admin",
+      id: "39.876.543",
+      direccion: "Cra. 15 # 93-47, Of. 302",
+      ciudad: "Bogotá",
+      telefono: "+57 300 987 6543",
+    },
+  ]);
   const [usuarioActual, setUsuarioActual] = useState<{
     nombre: string;
     email: string;
@@ -279,7 +290,13 @@ export default function App() {
 
   return (
     <DashboardLayout role="admin" screen={screen} onNav={nav} user={user}>
-      {screen === "admin-dashboard" && <AdminDashboard />}
+      {screen === "admin-dashboard" && (
+        <AdminDashboard
+          eventos={eventos}
+          reservas={reservas}
+          usuarios={usuarios}
+        />
+      )}
       {screen === "admin-profile" && (
         <ProfilePage
           role="admin"
