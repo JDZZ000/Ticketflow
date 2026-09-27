@@ -33,6 +33,7 @@ export function AgentRegisterEvent({
     teatro: eventoExistente?.teatro ?? "",
     pais: eventoExistente?.pais ?? "Colombia",
     ciudad: eventoExistente?.ciudad ?? "",
+    departamento: eventoExistente?.departamento ?? "",
     fechaInicio: eventoExistente?.fecha ?? "",
     horaInicio: eventoExistente?.horaInicio ?? "",
     horaFin: eventoExistente?.horaFin ?? "",
@@ -167,6 +168,12 @@ export function AgentRegisterEvent({
               placeholder="Bogotá"
               required
             />
+            <Input
+              label="Departamento"
+              value={form.departamento}
+              onChange={f("departamento")}
+              placeholder="Cundinamarca"
+            />
           </div>
         </section>
         <section className="mb-8">
@@ -280,6 +287,7 @@ export function AgentRegisterEvent({
                 estado: form.estado as EventStatus,
                 imagen: form.imagen || eventos[0]?.imagen || "",
                 observaciones: form.observaciones,
+                departamento: form.departamento,
               };
               if (eventoExistente) actualizarEvento(eventoExistente.id, datos);
               else registrarEvento(datos);

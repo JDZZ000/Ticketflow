@@ -11,6 +11,7 @@ export const EVENTOS: Evento[] = [
     teatro: "Teatro Colón",
     ciudad: "Bogotá",
     pais: "Colombia",
+    departamento: "Cundinamarca",
     fecha: "2027-03-15",
     horaInicio: "19:00",
     horaFin: "21:30",
@@ -39,6 +40,7 @@ export const EVENTOS: Evento[] = [
     imagen: "photo-1493225457124-a3eb161ffa5f",
     observaciones: "No se permiten menores de 12 años sin acompañante.",
     agente: "Catálogo inicial",
+    departamento: "Cundinamarca",
   },
   {
     id: 3,
@@ -58,6 +60,7 @@ export const EVENTOS: Evento[] = [
     imagen: "photo-1481627834876-b7833e8f5570",
     observaciones: "",
     agente: "Catálogo inicial",
+    departamento: "Cundinamarca",
   },
   {
     id: 4,
@@ -77,6 +80,7 @@ export const EVENTOS: Evento[] = [
     imagen: "photo-1514320291840-2e0a9bf2a9ae",
     observaciones: "Entrada gratuita.",
     agente: "Catálogo inicial",
+    departamento: "Cundinamarca",
   },
   {
     id: 5,
@@ -96,6 +100,7 @@ export const EVENTOS: Evento[] = [
     imagen: "photo-1578662996442-48f60103fc96",
     observaciones: "Mayores de 5 años.",
     agente: "Catálogo inicial",
+    departamento: "Antioquia",
   },
   {
     id: 6,
@@ -115,6 +120,7 @@ export const EVENTOS: Evento[] = [
     imagen: "photo-1527224857830-43a7acc85260",
     observaciones: "Apto para todos los públicos.",
     agente: "Catálogo inicial",
+    departamento: "Valle del Cauca",
   },
 ];
 

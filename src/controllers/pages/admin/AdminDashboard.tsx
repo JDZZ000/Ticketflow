@@ -91,7 +91,13 @@ export function AdminDashboard({
       ciudad: ciudades.join(", "),
     };
   });
-
+  function agruparPor(campo: "pais" | "departamento" | "ciudad") {
+    const valores = Array.from(new Set(eventos.map((e) => e[campo])));
+    return valores.map((v) => ({
+      nombre: v,
+      eventos: eventos.filter((e) => e[campo] === v).length,
+    }));
+  }
   return (
     <>
       <PageHeader
@@ -314,26 +320,9 @@ export function AdminDashboard({
               </h3>
               <div className="space-y-3">
                 {[
-                  {
-                    nivel: "País",
-                    items: [{ nombre: "Colombia", eventos: 6 }],
-                  },
-                  {
-                    nivel: "Departamento",
-                    items: [
-                      { nombre: "Cundinamarca", eventos: 4 },
-                      { nombre: "Antioquia", eventos: 1 },
-                      { nombre: "Valle del Cauca", eventos: 1 },
-                    ],
-                  },
-                  {
-                    nivel: "Ciudad",
-                    items: [
-                      { nombre: "Bogotá", eventos: 4 },
-                      { nombre: "Medellín", eventos: 1 },
-                      { nombre: "Cali", eventos: 1 },
-                    ],
-                  },
+                  { nivel: "País", items: agruparPor("pais") },
+                  { nivel: "Departamento", items: agruparPor("departamento") },
+                  { nivel: "Ciudad", items: agruparPor("ciudad") },
                 ].map((g) => (
                   <div key={g.nivel}>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
@@ -348,7 +337,7 @@ export function AdminDashboard({
                           <div
                             className="h-full rounded-full"
                             style={{
-                              width: `${(item.eventos / 6) * 100}%`,
+                              width: `${(item.eventos / (eventos.length || 1)) * 100}%`,
                               background: `linear-gradient(90deg, ${PRIMARY}, ${PRIMARY_L})`,
                             }}
                           />

@@ -43,6 +43,7 @@ export interface Evento {
   imagen: string;
   observaciones: string;
   agente: string;
+  departamento: string;
 }
 
 export interface Reserva {
