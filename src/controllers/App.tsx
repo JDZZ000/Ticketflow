@@ -236,6 +236,7 @@ export default function App() {
             user={usuarioActual}
             reservas={reservas}
             eventos={eventos}
+            actualizarEstadoReserva={actualizarEstadoReserva}
           />
         )}
         {screen === "client-profile" && (

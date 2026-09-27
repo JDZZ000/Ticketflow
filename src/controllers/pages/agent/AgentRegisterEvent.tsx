@@ -25,7 +25,6 @@ export function AgentRegisterEvent({
   ) => void;
 }) {
   const eventoExistente = eventos.find((e) => e.id === eventoId) ?? null;
-
   const [form, setForm] = useState({
     codigo: eventoExistente?.codigo ?? "",
     nombre: eventoExistente?.nombre ?? "",
@@ -43,6 +42,9 @@ export function AgentRegisterEvent({
     estado: eventoExistente?.estado ?? "Programado",
     imagen: eventoExistente?.imagen ?? "",
   });
+  const hoy = new Date().toISOString().slice(0, 10);
+  const ahora = new Date().toTimeString().slice(0, 5);
+  const minHora = form.fechaInicio === hoy ? ahora : undefined;
   const [error, setError] = useState("");
   const f = (k: keyof typeof form) => (v: string) =>
     setForm((p) => ({ ...p, [k]: v }));
@@ -52,6 +54,13 @@ export function AgentRegisterEvent({
     reader.onload = () =>
       setForm((p) => ({ ...p, imagen: reader.result as string }));
     reader.readAsDataURL(file);
+  }
+  function handleHoraInicio(v: string) {
+    if (form.fechaInicio === hoy && v < ahora) {
+      setForm((p) => ({ ...p, horaInicio: ahora }));
+    } else {
+      setForm((p) => ({ ...p, horaInicio: v }));
+    }
   }
 
   return (
@@ -193,13 +202,15 @@ export function AgentRegisterEvent({
               value={form.fechaInicio}
               onChange={f("fechaInicio")}
               required
+              min={hoy}
             />
             <Input
               label="Hora de inicio"
               type="time"
               value={form.horaInicio}
-              onChange={f("horaInicio")}
+              onChange={handleHoraInicio}
               required
+              min={minHora}
             />
             <Input
               label="Hora estimada de finalización"
@@ -269,6 +280,10 @@ export function AgentRegisterEvent({
                 setError(
                   "Por favor, completa los campos obligatorios (marcados con *)",
                 );
+                return;
+              }
+              if (form.fechaInicio === hoy && form.horaInicio < ahora) {
+                setError("La hora de inicio ya pasó para el día de hoy");
                 return;
               }
               setError("");

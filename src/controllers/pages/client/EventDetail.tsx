@@ -96,13 +96,19 @@ export function EventDetail({
               >
                 {fmtPrice(ev.precio)}
               </p>
-              <Btn
-                full
-                size="lg"
-                onClick={() => onNav("client-reserve", undefined, ev.id)}
-              >
-                Reservar entradas
-              </Btn>
+              {ev.estado === "En Boletería" ? (
+                <Btn
+                  full
+                  size="lg"
+                  onClick={() => onNav("client-reserve", undefined, ev.id)}
+                >
+                  Reservar entradas
+                </Btn>
+              ) : (
+                <p className="text-sm text-gray-500 bg-gray-100 rounded-xl py-3 px-4">
+                  No disponible para reservar (estado: {ev.estado})
+                </p>
+              )}
             </div>
             <div className="bg-gray-50 rounded-2xl p-4 space-y-2 text-sm">
               <p className="font-semibold text-gray-700">Estado del evento</p>
