@@ -76,12 +76,18 @@ export function AdminDashboard({
     { mes: "Dic", reservas: 95 },
   ];
 
-  const eventosAgente = [
-    { agente: "Carlos M.", eventos: 4, ciudad: "Bogotá" },
-    { agente: "Laura P.", eventos: 2, ciudad: "Medellín" },
-    { agente: "Juan S.", eventos: 1, ciudad: "Cali" },
-    { agente: "Ana R.", eventos: 3, ciudad: "Bogotá" },
-  ];
+  const agentesUnicos = Array.from(new Set(eventos.map((e) => e.agente)));
+  const eventosAgente = agentesUnicos.map((agente) => {
+    const eventosDeEsteAgente = eventos.filter((e) => e.agente === agente);
+    const ciudades = Array.from(
+      new Set(eventosDeEsteAgente.map((e) => e.ciudad)),
+    );
+    return {
+      agente,
+      eventos: eventosDeEsteAgente.length,
+      ciudad: ciudades.join(", "),
+    };
+  });
 
   return (
     <>
@@ -239,9 +245,6 @@ export function AdminDashboard({
                     <th className="pb-2 text-left font-semibold">Agente</th>
                     <th className="pb-2 text-left font-semibold">Ciudad</th>
                     <th className="pb-2 text-right font-semibold">Eventos</th>
-                    <th className="pb-2 text-right font-semibold">
-                      Ing. prom.
-                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -253,11 +256,6 @@ export function AdminDashboard({
                       <td className="py-2 text-gray-500">{a.ciudad}</td>
                       <td className="py-2 text-right font-bold text-violet-600">
                         {a.eventos}
-                      </td>
-                      <td className="py-2 text-right text-gray-600">
-                        {fmtPrice(
-                          Math.round(Math.random() * 3000000 + 1500000),
-                        )}
                       </td>
                     </tr>
                   ))}

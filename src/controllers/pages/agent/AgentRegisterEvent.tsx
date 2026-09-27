@@ -18,8 +18,11 @@ export function AgentRegisterEvent({
   onNav: (s: Screen, r?: Role, eventId?: number | null) => void;
   eventoId: number | null;
   eventos: Evento[];
-  registrarEvento: (nuevo: Omit<Evento, "id">) => void;
-  actualizarEvento: (id: number, cambios: Omit<Evento, "id">) => void;
+  registrarEvento: (nuevo: Omit<Evento, "id" | "agente">) => void;
+  actualizarEvento: (
+    id: number,
+    cambios: Omit<Evento, "id" | "agente">,
+  ) => void;
 }) {
   const eventoExistente = eventos.find((e) => e.id === eventoId) ?? null;
 
@@ -262,7 +265,7 @@ export function AgentRegisterEvent({
                 return;
               }
               setError("");
-              const datos: Omit<Evento, "id"> = {
+              const datos: Omit<Evento, "id" | "agente"> = {
                 codigo: form.codigo,
                 nombre: form.nombre,
                 descripcion: form.descripcion,

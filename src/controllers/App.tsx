@@ -119,14 +119,24 @@ export default function App() {
       prev.map((r) => (r.id === id ? { ...r, estado } : r)),
     );
   }
-  function registrarEvento(nuevo: Omit<Evento, "id">) {
-    setEventos((prev) => [...prev, { ...nuevo, id: proximoEventoId }]);
+  function registrarEvento(nuevo: Omit<Evento, "id" | "agente">) {
+    setEventos((prev) => [
+      ...prev,
+      {
+        ...nuevo,
+        id: proximoEventoId,
+        agente: usuarioActual?.nombre ?? "Desconocido",
+      },
+    ]);
     setProximoEventoId((prev) => prev + 1);
   }
 
-  function actualizarEvento(id: number, cambios: Omit<Evento, "id">) {
+  function actualizarEvento(
+    id: number,
+    cambios: Omit<Evento, "id" | "agente">,
+  ) {
     setEventos((prev) =>
-      prev.map((e) => (e.id === id ? { ...cambios, id } : e)),
+      prev.map((e) => (e.id === id ? { ...cambios, id, agente: e.agente } : e)),
     );
   }
 

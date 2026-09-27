@@ -19,6 +19,7 @@ export const EVENTOS: Evento[] = [
     estado: "En Boletería",
     imagen: "photo-1507003211169-0a1dd7228f2d",
     observaciones: "Función especial de temporada.",
+    agente: "Catálogo inicial",
   },
   {
     id: 2,
@@ -37,6 +38,7 @@ export const EVENTOS: Evento[] = [
     estado: "En Boletería",
     imagen: "photo-1493225457124-a3eb161ffa5f",
     observaciones: "No se permiten menores de 12 años sin acompañante.",
+    agente: "Catálogo inicial",
   },
   {
     id: 3,
@@ -55,6 +57,7 @@ export const EVENTOS: Evento[] = [
     estado: "En Boletería",
     imagen: "photo-1481627834876-b7833e8f5570",
     observaciones: "",
+    agente: "Catálogo inicial",
   },
   {
     id: 4,
@@ -73,6 +76,7 @@ export const EVENTOS: Evento[] = [
     estado: "En Boletería",
     imagen: "photo-1514320291840-2e0a9bf2a9ae",
     observaciones: "Entrada gratuita.",
+    agente: "Catálogo inicial",
   },
   {
     id: 5,
@@ -91,6 +95,7 @@ export const EVENTOS: Evento[] = [
     estado: "En Boletería",
     imagen: "photo-1578662996442-48f60103fc96",
     observaciones: "Mayores de 5 años.",
+    agente: "Catálogo inicial",
   },
   {
     id: 6,
@@ -109,6 +114,7 @@ export const EVENTOS: Evento[] = [
     estado: "En Boletería",
     imagen: "photo-1527224857830-43a7acc85260",
     observaciones: "Apto para todos los públicos.",
+    agente: "Catálogo inicial",
   },
 ];
 
