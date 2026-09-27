@@ -22,19 +22,19 @@ import {
 } from "recharts";
 
 // ─── ADMIN DASHBOARD ──────────────────────────────────────────────────────────
-const ingresosMensuales = [
-  { mes: "Ene", ingresos: 3200000 },
-  { mes: "Feb", ingresos: 4100000 },
-  { mes: "Mar", ingresos: 5800000 },
-  { mes: "Abr", ingresos: 4500000 },
-  { mes: "May", ingresos: 6200000 },
-  { mes: "Jun", ingresos: 7100000 },
-  { mes: "Jul", ingresos: 5400000 },
-  { mes: "Ago", ingresos: 8300000 },
-  { mes: "Sep", ingresos: 6900000 },
-  { mes: "Oct", ingresos: 9200000 },
-  { mes: "Nov", ingresos: 7800000 },
-  { mes: "Dic", ingresos: 11000000 },
+const MESES = [
+  "Ene",
+  "Feb",
+  "Mar",
+  "Abr",
+  "May",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dic",
 ];
 const CHART_COLORS = ["#6D28D9", "#7C3AED", "#8B5CF6", "#A78BFA", "#C4B5FD"];
 
@@ -61,20 +61,23 @@ export function AdminDashboard({
     value: eventos.filter((e) => e.ciudad === ciudad).length,
   }));
 
-  const reservasPorMes = [
-    { mes: "Ene", reservas: 23 },
-    { mes: "Feb", reservas: 35 },
-    { mes: "Mar", reservas: 48 },
-    { mes: "Abr", reservas: 29 },
-    { mes: "May", reservas: 52 },
-    { mes: "Jun", reservas: 61 },
-    { mes: "Jul", reservas: 44 },
-    { mes: "Ago", reservas: 67 },
-    { mes: "Sep", reservas: 58 },
-    { mes: "Oct", reservas: 73 },
-    { mes: "Nov", reservas: 81 },
-    { mes: "Dic", reservas: 95 },
-  ];
+  const reservasPorMes = MESES.map((mes, i) => ({
+    mes,
+    reservas: reservas.filter(
+      (r) => parseInt(r.fechaReserva.split("-")[1], 10) - 1 === i,
+    ).length,
+  }));
+
+  const ingresosMensuales = MESES.map((mes, i) => ({
+    mes,
+    ingresos: reservas
+      .filter(
+        (r) =>
+          r.estado === "Confirmada" &&
+          parseInt(r.fechaReserva.split("-")[1], 10) - 1 === i,
+      )
+      .reduce((suma, r) => suma + r.total, 0),
+  }));
 
   const agentesUnicos = Array.from(new Set(eventos.map((e) => e.agente)));
   const eventosAgente = agentesUnicos.map((agente) => {
@@ -171,7 +174,11 @@ export function AdminDashboard({
                   <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
                   <XAxis dataKey="mes" tick={{ fontSize: 11 }} />
                   <YAxis tickFormatter={fmtM} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v) => fmtPrice(Number(v))} />
+                  <Tooltip
+                    formatter={(v) =>
+                      Number(v) === 0 ? "Sin ingresos" : fmtPrice(Number(v))
+                    }
+                  />
                   <Line
                     type="monotone"
                     dataKey="ingresos"
