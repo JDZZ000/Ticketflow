@@ -1,6 +1,5 @@
 import { useState } from "react";
-import type { Screen, Role } from "../../../models/types";
-import { EVENTOS } from "../../../models/data/mockData";
+import type { Screen, Role, Evento } from "../../../models/types";
 import { Input } from "../../../views/components/Input";
 import { Select } from "../../../views/components/Select";
 import { EventCard } from "../../../views/components/EventCard";
@@ -9,8 +8,10 @@ import { PageHeader } from "../../../views/layouts/PageHeader";
 // ─── CLIENT EVENTS ────────────────────────────────────────────────────────────
 export function ClientEvents({
   onNav,
+  eventos,
 }: {
   onNav: (s: Screen, r?: Role, eventId?: number) => void;
+  eventos: Evento[];
 }) {
   const [ciudad, setCiudad] = useState("Todas");
   const [estado, setEstado] = useState("Todos");
@@ -18,7 +19,7 @@ export function ClientEvents({
 
   const ciudades = [
     "Todas",
-    ...Array.from(new Set(EVENTOS.map((e) => e.ciudad))),
+    ...Array.from(new Set(eventos.map((e) => e.ciudad))),
   ];
   const estados = [
     "Todos",
@@ -29,7 +30,7 @@ export function ClientEvents({
     "Cancelado",
   ];
 
-  const filtered = EVENTOS.filter((ev) => {
+  const filtered = eventos.filter((ev) => {
     const okCiudad = ciudad === "Todas" || ev.ciudad === ciudad;
     const okEstado = estado === "Todos" || ev.estado === estado;
     const okBuscar =

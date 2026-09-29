@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Screen, Role } from "../../../models/types";
+import type { Screen, Role, Evento } from "../../../models/types";
 import {
   PRIMARY,
   PRIMARY_L,
@@ -8,7 +8,6 @@ import {
   NAV,
 } from "../../../utils/theme";
 import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
-import { EVENTOS } from "../../../models/data/mockData";
 import { Logo } from "../../../views/components/Logo";
 import { Btn } from "../../../views/components/Btn";
 import { Input } from "../../../views/components/Input";
@@ -18,8 +17,10 @@ export function LoginPage({
   onNav,
   usuarios,
   loginExitoso,
+  eventos,
 }: {
   onNav: (s: Screen, role?: Role) => void;
+  eventos: Evento[];
   usuarios: {
     nombre: string;
     email: string;
@@ -119,7 +120,8 @@ export function LoginPage({
 
           {/* event preview cards */}
           <div className="space-y-3 mb-10">
-            {EVENTOS.filter((e) => e.estado === "En Boletería")
+            {eventos
+              .filter((e) => e.estado === "En Boletería")
               .slice(0, 2)
               .map((ev) => (
                 <div
