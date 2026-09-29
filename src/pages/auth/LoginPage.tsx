@@ -8,14 +8,23 @@ import { Btn } from "../../components/Btn";
 import { Input } from "../../components/Input";
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
-export function LoginPage({ onNav }: { onNav: (s: Screen, role?: Role) => void }) {
+export function LoginPage({ onNav, usuarios, loginExitoso }: { onNav: (s: Screen, role?: Role) => void; usuarios: { nombre: string; email: string; pass: string; role: Role; id: string; direccion: string; ciudad: string; telefono: string }[]; loginExitoso: (u: { nombre: string; email: string; role: Role; id: string; direccion: string; ciudad: string; telefono: string }) => void }) {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
+  const [error, setError] = useState("");
 
   function handleLogin() {
-    if (email.includes("agente")) onNav("agent-dashboard", "agent");
-    else if (email.includes("admin")) onNav("admin-dashboard", "admin");
-    else onNav("client-dashboard", "client");
+    if (email === "" || pass === "") {
+      setError("Por favor, completa todos los campos");
+      return;
+    }
+    setError("");
+    const encontrado = usuarios.find(u => u.email === email && u.pass === pass);
+    if (!encontrado) {
+      setError("Correo o contraseña incorrectos");
+      return;
+    }
+    loginExitoso(encontrado);
   }
 
   return (
@@ -109,6 +118,7 @@ export function LoginPage({ onNav }: { onNav: (s: Screen, role?: Role) => void }
               <div className="space-y-5 mb-5">
                 <Input label="Correo electrónico" type="email" value={email} onChange={setEmail} placeholder="correo@ejemplo.com" />
                 <Input label="Contraseña" type="password" value={pass} onChange={setPass} placeholder="••••••••" />
+                {error && <p className="text-red-500 text-sm">{error}</p>}
               </div>
               <div className="flex justify-end mb-6">
                 <button className="text-sm text-violet-600 hover:underline font-medium">¿Olvidaste tu contraseña?</button>

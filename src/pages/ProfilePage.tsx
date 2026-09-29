@@ -5,13 +5,21 @@ import { Btn } from "../components/Btn";
 import { PageHeader } from "../layouts/PageHeader";
 
 // ─── PROFILE PAGE ────────────────────────────────────────────────────────────
-export function ProfilePage({ role }: { role: Role }) {
-  const data =
-    role === "client"
-      ? { nombre: "María González", id: "52.456.123", email: "maria.gonzalez@email.com", direccion: "Calle 72 # 9-23, Apto 401", ciudad: "Bogotá", telefono: "+57 310 456 7890", extra: [["⭐ Puntos acumulados", "1,240"], ["📺 Prefiere ver publicidad", "Sí"]] }
-      : role === "agent"
-      ? { nombre: "Carlos Medina", id: "79.234.567", email: "carlos.medina@agentes.com", direccion: "Av. El Dorado # 69-76", ciudad: "Bogotá", telefono: "+57 320 123 4567", extra: [["💼 Comisión", "8%"], ["🏆 Experiencia", "5 años"]] }
-      : { nombre: "Laura Ríos", id: "39.876.543", email: "laura.rios@ticketflow.com", direccion: "Cra. 15 # 93-47, Of. 302", ciudad: "Bogotá", telefono: "+57 300 987 6543", extra: [["💰 Salario", "$4,500,000"], ["🕐 Horario", "Lun–Vie 8am–5pm"]] };
+export function ProfilePage({ role, user }: { role: Role; user: { nombre: string; email: string; id: string; direccion: string; ciudad: string; telefono: string } | null }) {
+  const extrasPorRol =
+  role === "client" ? [["⭐ Puntos acumulados", "1,240"], ["📺 Prefiere ver publicidad", "Sí"]]
+  : role === "agent" ? [["💼 Comisión", "8%"], ["🏆 Experiencia", "5 años"]]
+  : [["💰 Salario", "$4,500,000"], ["🕐 Horario", "Lun–Vie 8am–5pm"]];
+
+const data = {
+  nombre: user?.nombre ?? "Usuario",
+  id: user?.id ?? "—",
+  email: user?.email ?? "—",
+  direccion: user?.direccion ?? "—",
+  ciudad: user?.ciudad ?? "—",
+  telefono: user?.telefono ?? "—",
+  extra: extrasPorRol,
+};
 
   return (
     <>
