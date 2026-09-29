@@ -1,4 +1,4 @@
-import type { Reserva, Evento } from "../../../models/types";
+import type { Reserva, Evento, ReservaStatus } from "../../../models/types";
 import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
 import { Badge } from "../../../views/components/Badge";
 import { StatCard } from "../../../views/components/StatCard";
@@ -9,10 +9,12 @@ export function ClientReservations({
   user,
   reservas,
   eventos,
+  actualizarEstadoReserva,
 }: {
   user: { nombre: string } | null;
   reservas: Reserva[];
   eventos: Evento[];
+  actualizarEstadoReserva: (id: number, estado: ReservaStatus) => void;
 }) {
   const myRes = reservas
     .filter((r) => r.cliente === user?.nombre)
@@ -98,6 +100,19 @@ export function ClientReservations({
                   <div className="mt-1">
                     <Badge status={r.estado} />
                   </div>
+                  {r.estado !== "Cancelada" && (
+                    <button
+                      onClick={() => {
+                        if (
+                          confirm("¿Seguro que quieres cancelar esta reserva?")
+                        )
+                          actualizarEstadoReserva(r.id, "Cancelada");
+                      }}
+                      className="text-xs text-red-500 hover:underline mt-1.5 cursor-pointer"
+                    >
+                      Cancelar reserva
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
