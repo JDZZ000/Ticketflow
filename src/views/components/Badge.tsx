@@ -1,5 +1,5 @@
-import type { EventStatus, ReservaStatus } from "../types";
-import { statusColor } from "../utils/format";
+import type { EventStatus, ReservaStatus } from "../../models/types";
+import { statusColor } from "../../utils/format";
 
 export function Badge({ status }: { status: EventStatus | ReservaStatus }) {
   return (

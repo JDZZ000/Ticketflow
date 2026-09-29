@@ -1,5 +1,5 @@
-import type { Evento } from "../types";
-import { unsplash, fmtDate, fmtPrice } from "../utils/format";
+import type { Evento } from "../../models/types";
+import { unsplash, fmtDate, fmtPrice } from "../../utils/format";
 import { Badge } from "./Badge";
 import { Btn } from "./Btn";
 
