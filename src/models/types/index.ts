@@ -1,14 +1,29 @@
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type Role = "client" | "agent" | "admin";
 export type Screen =
-  | "landing" | "login" | "register"
-  | "client-dashboard" | "client-events" | "client-event-detail"
-  | "client-reserve" | "client-reservations" | "client-profile"
-  | "agent-dashboard" | "agent-register-event" | "agent-my-events"
-  | "agent-reservations" | "agent-profile"
-  | "admin-dashboard" | "admin-profile";
+  | "landing"
+  | "login"
+  | "register"
+  | "client-dashboard"
+  | "client-events"
+  | "client-event-detail"
+  | "client-reserve"
+  | "client-reservations"
+  | "client-profile"
+  | "agent-dashboard"
+  | "agent-register-event"
+  | "agent-my-events"
+  | "agent-reservations"
+  | "agent-profile"
+  | "admin-dashboard"
+  | "admin-profile";
 
-export type EventStatus = "Programado" | "En Boletería" | "En Vivo" | "Finalizado" | "Cancelado";
+export type EventStatus =
+  | "Programado"
+  | "En Boletería"
+  | "En Vivo"
+  | "Finalizado"
+  | "Cancelado";
 export type ReservaStatus = "Reservada" | "Confirmada" | "Cancelada";
 
 export interface Evento {
@@ -27,6 +42,8 @@ export interface Evento {
   estado: EventStatus;
   imagen: string;
   observaciones: string;
+  agente: string;
+  departamento: string;
 }
 
 export interface Reserva {
@@ -39,4 +56,3 @@ export interface Reserva {
   estado: ReservaStatus;
   observaciones: string;
 }
-

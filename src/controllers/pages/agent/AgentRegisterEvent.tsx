@@ -18,8 +18,11 @@ export function AgentRegisterEvent({
   onNav: (s: Screen, r?: Role, eventId?: number | null) => void;
   eventoId: number | null;
   eventos: Evento[];
-  registrarEvento: (nuevo: Omit<Evento, "id">) => void;
-  actualizarEvento: (id: number, cambios: Omit<Evento, "id">) => void;
+  registrarEvento: (nuevo: Omit<Evento, "id" | "agente">) => void;
+  actualizarEvento: (
+    id: number,
+    cambios: Omit<Evento, "id" | "agente">,
+  ) => void;
 }) {
   const eventoExistente = eventos.find((e) => e.id === eventoId) ?? null;
 
@@ -30,6 +33,7 @@ export function AgentRegisterEvent({
     teatro: eventoExistente?.teatro ?? "",
     pais: eventoExistente?.pais ?? "Colombia",
     ciudad: eventoExistente?.ciudad ?? "",
+    departamento: eventoExistente?.departamento ?? "",
     fechaInicio: eventoExistente?.fecha ?? "",
     horaInicio: eventoExistente?.horaInicio ?? "",
     horaFin: eventoExistente?.horaFin ?? "",
@@ -164,6 +168,12 @@ export function AgentRegisterEvent({
               placeholder="Bogotá"
               required
             />
+            <Input
+              label="Departamento"
+              value={form.departamento}
+              onChange={f("departamento")}
+              placeholder="Cundinamarca"
+            />
           </div>
         </section>
         <section className="mb-8">
@@ -262,7 +272,7 @@ export function AgentRegisterEvent({
                 return;
               }
               setError("");
-              const datos: Omit<Evento, "id"> = {
+              const datos: Omit<Evento, "id" | "agente"> = {
                 codigo: form.codigo,
                 nombre: form.nombre,
                 descripcion: form.descripcion,
@@ -277,6 +287,7 @@ export function AgentRegisterEvent({
                 estado: form.estado as EventStatus,
                 imagen: form.imagen || eventos[0]?.imagen || "",
                 observaciones: form.observaciones,
+                departamento: form.departamento,
               };
               if (eventoExistente) actualizarEvento(eventoExistente.id, datos);
               else registrarEvento(datos);
