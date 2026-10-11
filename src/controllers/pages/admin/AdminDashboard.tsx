@@ -317,22 +317,31 @@ export function AdminDashboard({
               >
                 Eventos por ciudad
               </h3>
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={320}>
                 <PieChart>
                   <Pie
                     data={eventosPorCiudad}
                     cx="50%"
-                    cy="50%"
-                    outerRadius={90}
+                    cy="42%"
+                    outerRadius={95}
                     dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
                   >
                     {eventosPorCiudad.map((c) => (
                       <Cell key={c.name} fill={colorCiudad(c.name)} />
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend />
+                  <Legend
+                    verticalAlign="bottom"
+                    iconType="circle"
+                    wrapperStyle={{ paddingTop: 16 }}
+                    formatter={(value) => (
+                      <span className="text-sm text-gray-700">
+                        {value}:{" "}
+                        {eventosPorCiudad.find((c) => c.name === value)?.value}
+                      </span>
+                    )}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
