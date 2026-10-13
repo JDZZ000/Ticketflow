@@ -1,26 +1,26 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
-@import 'tailwindcss';
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap");
+@import "tailwindcss";
 
 @theme inline {
-  --color-primary: #6D28D9;
-  --color-primary-light: #7C3AED;
-  --color-primary-dark: #5B21B6;
-  --color-accent: #F472B6;
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
-  --color-bg: #F5F6FA;
-  --color-surface: #FFFFFF;
-  --color-nav: #1A1B2E;
+  --color-primary: #6d28d9;
+  --color-primary-light: #7c3aed;
+  --color-primary-dark: #5b21b6;
+  --color-accent: #f472b6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-bg: #f5f6fa;
+  --color-surface: #ffffff;
+  --color-nav: #1a1b2e;
   --color-nav-light: #252641;
-  --color-text: #1A1B2E;
-  --color-muted: #6B7280;
-  --color-border: #E5E7EB;
-  --font-display: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --color-text: #1a1b2e;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --font-display: "Outfit", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 * {
@@ -34,11 +34,138 @@ body {
   margin: 0;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
 }
 
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #c4b5fd; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #7C3AED; }
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c4b5fd;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7c3aed;
+}
+
+/* ───────── Luces de escenario (hero de la Landing) ───────── */
+.spots {
+  position: absolute;
+  inset: -24px;
+  overflow: hidden;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.spot {
+  --w: clamp(140px, 22vw, 300px);
+  position: absolute;
+  top: -4%;
+  width: var(--w);
+  height: 92%;
+  margin-left: calc(var(--w) / -2);
+  transform-origin: 50% 0;
+  clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%);
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 30%,
+    #000 70%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 30%,
+    #000 70%,
+    transparent 100%
+  );
+  opacity: 0.6;
+  animation: swing var(--t, 9s) ease-in-out var(--dl, 0s) infinite alternate;
+}
+
+.spot-1 {
+  left: 24%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.7),
+    transparent 85%
+  );
+  --a1: -26deg;
+  --a2: 10deg;
+  --t: 9s;
+}
+
+.spot-2 {
+  left: 56%;
+  background: linear-gradient(
+    180deg,
+    rgba(244, 114, 182, 0.6),
+    transparent 85%
+  );
+  --a1: -10deg;
+  --a2: 24deg;
+  --t: 11s;
+  --dl: -3s;
+}
+
+.spot-3 {
+  left: 82%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5),
+    transparent 85%
+  );
+  --a1: -24deg;
+  --a2: 18deg;
+  --t: 13s;
+  --dl: -6s;
+}
+
+@keyframes swing {
+  from {
+    transform: rotate(var(--a1));
+  }
+  to {
+    transform: rotate(var(--a2));
+  }
+}
+
+/* Si la persona tiene activado "reducir movimiento", las luces quedan quietas */
+@media (prefers-reduced-motion: reduce) {
+  .spot {
+    animation: none;
+  }
+}
+
+/* ───────── Aparición suave al hacer scroll ───────── */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+
+[data-reveal].in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
