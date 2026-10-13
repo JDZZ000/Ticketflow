@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Screen, Role } from "../models/types";
 import type { Reserva, ReservaStatus, Evento } from "../models/types";
 import { EVENTOS, RESERVAS } from "../models/data/mockData";
+import { entradasDisponibles } from "../utils/cupo";
 import { LandingPage } from "./pages/auth/LandingPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
@@ -99,7 +100,12 @@ export default function App() {
     entradas: number,
     total: number,
     observaciones: string,
-  ) {
+  ): boolean {
+    // Validación de cupo: nunca se reserva más de lo que queda disponible
+    const ev = eventos.find((e) => e.id === eventoId);
+    if (!ev || entradas < 1 || entradas > entradasDisponibles(ev, reservas)) {
+      return false;
+    }
     const nuevoId = Math.max(0, ...reservas.map((r) => r.id)) + 1;
     const nueva: Reserva = {
       id: nuevoId,
@@ -112,12 +118,23 @@ export default function App() {
       observaciones,
     };
     setReservas((prev) => [...prev, nueva]);
+    return true;
   }
 
-  function actualizarEstadoReserva(id: number, estado: ReservaStatus) {
+  // Cambia el estado de una reserva. Devuelve false si no se pudo: reactivar una
+  // reserva cancelada solo es posible si el evento todavía tiene cupo para ella.
+  function actualizarEstadoReserva(id: number, estado: ReservaStatus): boolean {
+    const reserva = reservas.find((r) => r.id === id);
+    if (reserva && reserva.estado === "Cancelada" && estado !== "Cancelada") {
+      const ev = eventos.find((e) => e.id === reserva.eventoId);
+      if (!ev || reserva.entradas > entradasDisponibles(ev, reservas)) {
+        return false;
+      }
+    }
     setReservas((prev) =>
       prev.map((r) => (r.id === id ? { ...r, estado } : r)),
     );
+    return true;
   }
   function registrarEvento(nuevo: Omit<Evento, "id" | "agente">) {
     setEventos((prev) => [
@@ -214,13 +231,14 @@ export default function App() {
           />
         )}
         {screen === "client-events" && (
-          <ClientEvents onNav={nav} eventos={eventos} />
+          <ClientEvents onNav={nav} eventos={eventos} reservas={reservas} />
         )}
         {screen === "client-event-detail" && (
           <EventDetail
             onNav={nav}
             eventoId={eventoSeleccionadoId}
             eventos={eventos}
+            reservas={reservas}
           />
         )}
         {screen === "client-reserve" && (
@@ -229,6 +247,7 @@ export default function App() {
             eventoId={eventoSeleccionadoId}
             crearReserva={crearReserva}
             eventos={eventos}
+            reservas={reservas}
           />
         )}
         {screen === "client-reservations" && (

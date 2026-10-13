@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type {
   ReservaStatus,
   Reserva,
@@ -6,6 +7,7 @@ import type {
   Role,
 } from "../../../models/types";
 import { fmtPrice, fmtDate } from "../../../utils/format";
+import { entradasDisponibles } from "../../../utils/cupo";
 import { Badge } from "../../../views/components/Badge";
 import { PageHeader } from "../../../views/layouts/PageHeader";
 
@@ -19,14 +21,23 @@ export function AgentReservations({
   onNav: (s: Screen, r?: Role, eventId?: number | null) => void;
   reservas: Reserva[];
   eventos: Evento[];
-  actualizarEstadoReserva: (id: number, estado: ReservaStatus) => void;
+  actualizarEstadoReserva: (id: number, estado: ReservaStatus) => boolean;
 }) {
+  const [aviso, setAviso] = useState("");
   return (
     <>
       <PageHeader
         title="Gestión de Reservas"
         subtitle="Administra las reservas recibidas en tus eventos"
       />
+      {aviso && (
+        <div
+          role="alert"
+          className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4"
+        >
+          {aviso}
+        </div>
+      )}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[700px]">
@@ -57,6 +68,10 @@ export function AgentReservations({
                 .filter((r) => eventos.some((e) => e.id === r.eventoId))
                 .map((r) => {
                   const ev = eventos.find((e) => e.id === r.eventoId)!;
+                  // Una reserva cancelada solo se puede reactivar si hay cupo para ella
+                  const sinCupo =
+                    r.estado === "Cancelada" &&
+                    r.entradas > entradasDisponibles(ev, reservas);
                   return (
                     <tr
                       key={r.id}
@@ -89,16 +104,30 @@ export function AgentReservations({
                       <td className="px-4 py-3.5">
                         <select
                           value={r.estado}
-                          onChange={(e) =>
-                            actualizarEstadoReserva(
+                          onChange={(e) => {
+                            const ok = actualizarEstadoReserva(
                               r.id,
                               e.target.value as ReservaStatus,
-                            )
-                          }
+                            );
+                            setAviso(
+                              ok
+                                ? ""
+                                : `No se puede reactivar la reserva #${r.id}: "${ev.nombre}" solo tiene ${entradasDisponibles(ev, reservas)} entradas disponibles y la reserva es de ${r.entradas}.`,
+                            );
+                          }}
                           className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white"
                         >
                           {["Reservada", "Confirmada", "Cancelada"].map((s) => (
-                            <option key={s}>{s}</option>
+                            <option
+                              key={s}
+                              value={s}
+                              disabled={sinCupo && s !== "Cancelada"}
+                            >
+                              {s}
+                              {sinCupo && s !== "Cancelada"
+                                ? " (sin cupo)"
+                                : ""}
+                            </option>
                           ))}
                         </select>
                       </td>

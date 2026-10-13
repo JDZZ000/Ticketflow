@@ -1,6 +1,7 @@
-import type { Screen, Role, Evento } from "../../../models/types";
+import type { Screen, Role, Evento, Reserva } from "../../../models/types";
 import { PRIMARY, PRIMARY_L } from "../../../utils/theme";
 import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
+import { entradasDisponibles, quedanPocas } from "../../../utils/cupo";
 import { Btn } from "../../../views/components/Btn";
 import { Badge } from "../../../views/components/Badge";
 
@@ -9,12 +10,16 @@ export function EventDetail({
   onNav,
   eventoId,
   eventos,
+  reservas,
 }: {
   onNav: (s: Screen, r?: Role, eventId?: number) => void;
   eventoId: number | null;
   eventos: Evento[];
+  reservas: Reserva[];
 }) {
   const ev = eventos.find((e) => e.id === eventoId) ?? eventos[0];
+  const disponibles = entradasDisponibles(ev, reservas);
+  const agotado = disponibles === 0;
   return (
     <>
       <button
@@ -96,7 +101,11 @@ export function EventDetail({
               >
                 {fmtPrice(ev.precio)}
               </p>
-              {ev.estado === "En Boletería" ? (
+              {ev.estado === "En Boletería" && agotado ? (
+                <p className="text-sm font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl py-3 px-4">
+                  Agotado: ya no quedan entradas disponibles
+                </p>
+              ) : ev.estado === "En Boletería" ? (
                 <Btn
                   full
                   size="lg"
@@ -113,6 +122,23 @@ export function EventDetail({
             <div className="bg-gray-50 rounded-2xl p-4 space-y-2 text-sm">
               <p className="font-semibold text-gray-700">Estado del evento</p>
               <Badge status={ev.estado} />
+              <p className="text-gray-600 pt-1">
+                {agotado ? (
+                  <span className="font-semibold text-red-700">Agotado</span>
+                ) : (
+                  <>
+                    <span className="font-bold text-gray-800">
+                      {disponibles.toLocaleString("es-CO")}
+                    </span>{" "}
+                    entradas disponibles
+                  </>
+                )}
+              </p>
+              {quedanPocas(ev, reservas) && (
+                <p className="text-xs font-semibold text-amber-600">
+                  ¡Últimas entradas!
+                </p>
+              )}
             </div>
             <div className="bg-gray-50 rounded-2xl p-4 text-sm space-y-3">
               <p className="font-semibold text-gray-700">Organizador</p>

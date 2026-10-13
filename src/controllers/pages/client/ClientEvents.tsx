@@ -1,5 +1,6 @@
 import { useState } from "react";
-import type { Screen, Role, Evento } from "../../../models/types";
+import type { Screen, Role, Evento, Reserva } from "../../../models/types";
+import { entradasDisponibles } from "../../../utils/cupo";
 import { Input } from "../../../views/components/Input";
 import { Select } from "../../../views/components/Select";
 import { EventCard } from "../../../views/components/EventCard";
@@ -9,9 +10,11 @@ import { PageHeader } from "../../../views/layouts/PageHeader";
 export function ClientEvents({
   onNav,
   eventos,
+  reservas,
 }: {
   onNav: (s: Screen, r?: Role, eventId?: number) => void;
   eventos: Evento[];
+  reservas: Reserva[];
 }) {
   const [ciudad, setCiudad] = useState("Todas");
   const [estado, setEstado] = useState("Todos");
@@ -74,6 +77,7 @@ export function ClientEvents({
           <EventCard
             key={ev.id}
             ev={ev}
+            agotado={entradasDisponibles(ev, reservas) === 0}
             onView={() => onNav("client-event-detail", undefined, ev.id)}
           />
         ))}
