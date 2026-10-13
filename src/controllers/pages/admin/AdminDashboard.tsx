@@ -36,7 +36,35 @@ const MESES = [
   "Nov",
   "Dic",
 ];
-const CHART_COLORS = ["#6D28D9", "#7C3AED", "#8B5CF6", "#A78BFA", "#C4B5FD"];
+// Paleta de las gráficas: morado de la marca más colores de apoyo
+const CHART_COLORS = [
+  "#6D28D9",
+  "#EC4899",
+  "#F59E0B",
+  "#06B6D4",
+  "#10B981",
+  "#F43F5E",
+];
+
+// Cada nombre recibe un color la primera vez que aparece y lo conserva siempre.
+// Los nombres nuevos toman un color que nadie ha usado: primero los de la paleta
+// y, cuando se acaban, se generan colores nuevos con tonos bien separados.
+function crearPaleta() {
+  const asignados = new Map<string, string>();
+  return (nombre: string): string => {
+    const existente = asignados.get(nombre);
+    if (existente) return existente;
+    const n = asignados.size;
+    const color =
+      n < CHART_COLORS.length
+        ? CHART_COLORS[n]
+        : `hsl(${Math.round((n * 137.508) % 360)}, 65%, 50%)`;
+    asignados.set(nombre, color);
+    return color;
+  };
+}
+const colorCiudad = crearPaleta();
+const colorEvento = crearPaleta();
 
 export function AdminDashboard({
   eventos,
@@ -188,9 +216,9 @@ export function AdminDashboard({
                   <Line
                     type="monotone"
                     dataKey="ingresos"
-                    stroke={PRIMARY}
+                    stroke="#10B981"
                     strokeWidth={2.5}
-                    dot={{ fill: PRIMARY, r: 3 }}
+                    dot={{ fill: "#10B981", r: 3 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -211,11 +239,11 @@ export function AdminDashboard({
                   <XAxis dataKey="evento" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip />
-                  <Bar
-                    dataKey="reservas"
-                    fill={PRIMARY}
-                    radius={[4, 4, 0, 0]}
-                  />
+                  <Bar dataKey="reservas" radius={[4, 4, 0, 0]}>
+                    {reservasPorEvento.map((d) => (
+                      <Cell key={d.evento} fill={colorEvento(d.evento)} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -239,7 +267,7 @@ export function AdminDashboard({
                   <Tooltip />
                   <Bar
                     dataKey="reservas"
-                    fill="#8B5CF6"
+                    fill="#EC4899"
                     radius={[4, 4, 0, 0]}
                   />
                 </BarChart>
@@ -289,25 +317,31 @@ export function AdminDashboard({
               >
                 Eventos por ciudad
               </h3>
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={320}>
                 <PieChart>
                   <Pie
                     data={eventosPorCiudad}
                     cx="50%"
-                    cy="50%"
-                    outerRadius={90}
+                    cy="42%"
+                    outerRadius={95}
                     dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
                   >
-                    {eventosPorCiudad.map((_, i) => (
-                      <Cell
-                        key={i}
-                        fill={CHART_COLORS[i % CHART_COLORS.length]}
-                      />
+                    {eventosPorCiudad.map((c) => (
+                      <Cell key={c.name} fill={colorCiudad(c.name)} />
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend />
+                  <Legend
+                    verticalAlign="bottom"
+                    iconType="circle"
+                    wrapperStyle={{ paddingTop: 16 }}
+                    formatter={(value) => (
+                      <span className="text-sm text-gray-700">
+                        {value}:{" "}
+                        {eventosPorCiudad.find((c) => c.name === value)?.value}
+                      </span>
+                    )}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -320,9 +354,21 @@ export function AdminDashboard({
               </h3>
               <div className="space-y-3">
                 {[
-                  { nivel: "País", items: agruparPor("pais") },
-                  { nivel: "Departamento", items: agruparPor("departamento") },
-                  { nivel: "Ciudad", items: agruparPor("ciudad") },
+                  {
+                    nivel: "País",
+                    items: agruparPor("pais"),
+                    color: "#6D28D9",
+                  },
+                  {
+                    nivel: "Departamento",
+                    items: agruparPor("departamento"),
+                    color: "#EC4899",
+                  },
+                  {
+                    nivel: "Ciudad",
+                    items: agruparPor("ciudad"),
+                    color: "#06B6D4",
+                  },
                 ].map((g) => (
                   <div key={g.nivel}>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
@@ -338,14 +384,17 @@ export function AdminDashboard({
                             className="h-full rounded-full"
                             style={{
                               width: `${(item.eventos / (eventos.length || 1)) * 100}%`,
-                              background: `linear-gradient(90deg, ${PRIMARY}, ${PRIMARY_L})`,
+                              background: g.color,
                             }}
                           />
                         </div>
                         <span className="text-sm text-gray-700 font-medium w-32">
                           {item.nombre}
                         </span>
-                        <span className="text-sm font-bold text-violet-700 w-8 text-right">
+                        <span
+                          className="text-sm font-bold w-8 text-right"
+                          style={{ color: g.color }}
+                        >
                           {item.eventos}
                         </span>
                       </div>
