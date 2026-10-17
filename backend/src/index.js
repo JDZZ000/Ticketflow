@@ -4,6 +4,7 @@ import cors from "cors";
 import { pool } from "./db.js";
 import catalogosRoutes from "./routes/catalogos.js";
 import authRoutes from "./routes/auth.js";
+import eventosRoutes from "./routes/eventos.js";
 
 if (!process.env.JWT_SECRET) {
   console.error("Falta JWT_SECRET en backend/.env");
@@ -12,10 +13,12 @@ if (!process.env.JWT_SECRET) {
 
 const app = express();
 app.use(cors({ origin: ["http://localhost:8443"] }));
-app.use(express.json());
+// Límite alto porque un evento puede traer una imagen subida (en base64)
+app.use(express.json({ limit: "10mb" }));
 
 app.use("/api", catalogosRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/eventos", eventosRoutes);
 
 // Comprueba que el servidor y la base de datos responden
 app.get("/api/salud", async (_req, res) => {
