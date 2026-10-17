@@ -2,10 +2,20 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { pool } from "./db.js";
+import catalogosRoutes from "./routes/catalogos.js";
+import authRoutes from "./routes/auth.js";
+
+if (!process.env.JWT_SECRET) {
+  console.error("Falta JWT_SECRET en backend/.env");
+  process.exit(1);
+}
 
 const app = express();
 app.use(cors({ origin: ["http://localhost:8443"] }));
 app.use(express.json());
+
+app.use("/api", catalogosRoutes);
+app.use("/api/auth", authRoutes);
 
 // Comprueba que el servidor y la base de datos responden
 app.get("/api/salud", async (_req, res) => {
