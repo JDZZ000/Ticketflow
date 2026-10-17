@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Screen, Role } from "../models/types";
 import type { Reserva, ReservaStatus, Evento } from "../models/types";
 import { EVENTOS, RESERVAS } from "../models/data/mockData";
@@ -18,6 +18,8 @@ import { AgentRegisterEvent } from "./pages/agent/AgentRegisterEvent";
 import { AgentMyEvents } from "./pages/agent/AgentMyEvents";
 import { AgentReservations } from "./pages/agent/AgentReservations";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { obtenerPerfil, type UsuarioActual } from "../models/api/auth";
+import { ApiError, sesion } from "../models/api/cliente";
 
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
 export default function App() {
@@ -45,15 +47,32 @@ export default function App() {
       telefono: "+57 300 987 6543",
     },
   ]);
-  const [usuarioActual, setUsuarioActual] = useState<{
-    nombre: string;
-    email: string;
-    role: Role;
-    id: string;
-    direccion: string;
-    ciudad: string;
-    telefono: string;
-  } | null>(null);
+  const [usuarioActual, setUsuarioActual] = useState<UsuarioActual | null>(
+    null,
+  );
+
+  // Si quedó una sesión guardada en el navegador, se comprueba con el servidor al abrir la página
+  const [cargandoSesion, setCargandoSesion] = useState(
+    () => sesion.token() !== null,
+  );
+  useEffect(() => {
+    if (sesion.token() === null) return;
+    let activo = true;
+    obtenerPerfil()
+      .then((u) => {
+        if (activo) loginExitoso(u);
+      })
+      .catch((e: unknown) => {
+        // Solo se descarta la sesión si el servidor dice que ya no vale (401)
+        if (e instanceof ApiError && e.status === 401) sesion.borrar();
+      })
+      .finally(() => {
+        if (activo) setCargandoSesion(false);
+      });
+    return () => {
+      activo = false;
+    };
+  }, []);
   const [reservas, setReservas] = useState<Reserva[]>(RESERVAS);
   const [eventoSeleccionadoId, setEventoSeleccionadoId] = useState<
     number | null
@@ -62,21 +81,6 @@ export default function App() {
   const [proximoEventoId, setProximoEventoId] = useState(
     Math.max(0, ...EVENTOS.map((e) => e.id)) + 1,
   );
-  function registrarUsuario(
-    nombre: string,
-    email: string,
-    pass: string,
-    role: Role,
-    id: string,
-    direccion: string,
-    ciudad: string,
-    telefono: string,
-  ) {
-    setUsuarios((prev) => [
-      ...prev,
-      { nombre, email, pass, role, id, direccion, ciudad, telefono },
-    ]);
-  }
   function actualizarPerfil(
     email: string,
     id: string,
@@ -160,15 +164,7 @@ export default function App() {
   function eliminarEvento(id: number) {
     setEventos((prev) => prev.filter((e) => e.id !== id));
   }
-  function loginExitoso(u: {
-    nombre: string;
-    email: string;
-    role: Role;
-    id: string;
-    direccion: string;
-    ciudad: string;
-    telefono: string;
-  }) {
+  function loginExitoso(u: UsuarioActual) {
     setUsuarioActual(u);
     const destino =
       u.role === "agent"
@@ -180,7 +176,15 @@ export default function App() {
   }
   const [role, setRole] = useState<Role>("client");
 
+  // Cerrar sesión: se borra el token y se olvida al usuario
+  function cerrarSesion() {
+    sesion.borrar();
+    setUsuarioActual(null);
+  }
+
   function nav(s: Screen, r?: Role, eventId?: number | null) {
+    // El botón «Cerrar sesión» navega a la portada: ahí termina la sesión
+    if ((s === "landing" || s === "login") && usuarioActual) cerrarSesion();
     if (r) setRole(r);
     if (eventId !== undefined) setEventoSeleccionadoId(eventId);
     setScreen(s);
@@ -192,25 +196,22 @@ export default function App() {
       ? { name: "Carlos Medina", email: "carlos@agentes.com" }
       : { name: "Laura Ríos", email: "laura@ticketflow.com" };
 
+  if (cargandoSesion)
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center text-gray-500"
+        style={{ fontFamily: "Outfit, sans-serif" }}
+      >
+        Cargando…
+      </div>
+    );
   if (screen === "landing")
     return <LandingPage onNav={nav} eventos={eventos} />;
   if (screen === "login")
     return (
-      <LoginPage
-        onNav={nav}
-        usuarios={usuarios}
-        loginExitoso={loginExitoso}
-        eventos={eventos}
-      />
+      <LoginPage onNav={nav} loginExitoso={loginExitoso} eventos={eventos} />
     );
-  if (screen === "register")
-    return (
-      <RegisterPage
-        onNav={nav}
-        registrarUsuario={registrarUsuario}
-        usuarios={usuarios}
-      />
-    );
+  if (screen === "register") return <RegisterPage onNav={nav} />;
 
   if (
     screen === "client-dashboard" ||
