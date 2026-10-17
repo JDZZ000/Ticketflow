@@ -20,6 +20,7 @@ const CONSULTA_EVENTOS = `
          c.nombre AS ciudad, d.nombre AS departamento, p.nombre AS pais,
          to_char(e.fecha_hora_inicio, 'YYYY-MM-DD') AS fecha,
          to_char(e.fecha_hora_inicio, 'HH24:MI') AS "horaInicio",
+         to_char(e.fecha_hora_fin, 'YYYY-MM-DD') AS "fechaFin",
          to_char(e.fecha_hora_fin, 'HH24:MI') AS "horaFin",
          e.capacidad,
          e.precio_base::float8 AS precio,
@@ -85,19 +86,25 @@ function validarEvento(cuerpo, { exigirFuturo }) {
   if (!ESTADOS.includes(estado)) {
     return { error: `El estado debe ser uno de: ${ESTADOS.join(", ")}` };
   }
+  // La fecha de fin es opcional: si no se envía, el evento termina el mismo día que empieza
+  const fechaFin = faltante(c.fechaFin) ? c.fecha : c.fechaFin;
   if (
     !/^\d{4}-\d{2}-\d{2}$/.test(c.fecha) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(fechaFin) ||
     !/^\d{2}:\d{2}$/.test(c.horaInicio) ||
     !/^\d{2}:\d{2}$/.test(c.horaFin)
   ) {
-    return { error: "La fecha debe ser AAAA-MM-DD y las horas HH:MM" };
+    return { error: "Las fechas deben ser AAAA-MM-DD y las horas HH:MM" };
   }
   const inicio = new Date(`${c.fecha}T${c.horaInicio}:00`);
-  if (Number.isNaN(inicio.getTime())) {
+  const fin = new Date(`${fechaFin}T${c.horaFin}:00`);
+  if (Number.isNaN(inicio.getTime()) || Number.isNaN(fin.getTime())) {
     return { error: "La fecha u hora no son válidas" };
   }
-  if (c.horaFin <= c.horaInicio) {
-    return { error: "La hora de fin debe ser posterior a la de inicio" };
+  if (fin <= inicio) {
+    return {
+      error: "La fecha y hora de fin deben ser posteriores a las de inicio",
+    };
   }
   if (exigirFuturo && inicio <= new Date()) {
     return { error: "El evento debe empezar en una fecha y hora futuras" };
@@ -110,7 +117,7 @@ function validarEvento(cuerpo, { exigirFuturo }) {
       teatro,
       ciudadId,
       inicio: `${c.fecha} ${c.horaInicio}`,
-      fin: `${c.fecha} ${c.horaFin}`,
+      fin: `${fechaFin} ${c.horaFin}`,
       capacidad,
       precio,
       estado,
@@ -164,6 +171,7 @@ router.post("/", verificarToken, exigirRol("agente"), async (req, res) => {
       [datos.estado],
     );
     // El código EVT-001 se arma con el id; mientras tanto se inserta uno temporal único
+    // (la columna codigo admite máximo 20 caracteres)
     const { rows } = await client.query(
       `INSERT INTO evento (codigo, nombre, descripcion, teatro, capacidad, precio_base,
                            fecha_hora_inicio, fecha_hora_fin, observacion, imagen,
@@ -270,9 +278,11 @@ router.delete("/:id", verificarToken, exigirRol("agente"), async (req, res) => {
   } catch (err) {
     // La base no deja borrar un evento que tiene reservas
     if (err.code === "23503") {
-      return res.status(409).json({
-        error: "No se puede eliminar: el evento tiene reservas asociadas",
-      });
+      return res
+        .status(409)
+        .json({
+          error: "No se puede eliminar: el evento tiene reservas asociadas",
+        });
     }
     console.error(err);
     res.status(500).json({ error: "No se pudo eliminar el evento" });

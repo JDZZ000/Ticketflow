@@ -270,4 +270,171 @@ router.patch(
   },
 );
 
+// PUT /api/reservas/:id — modificar el número de entradas y/o las observaciones
+//  - El cliente solo modifica sus reservas, y solo mientras estén "Reservada".
+//  - El agente modifica cualquiera que no esté cancelada.
+//  - Si suben las entradas, tiene que haber cupo; si bajan, se liberan.
+router.put(
+  "/:id",
+  verificarToken,
+  exigirRol("cliente", "agente"),
+  async (req, res) => {
+    const id = idDeLaRuta(req);
+    const { entradas, observaciones } = req.body ?? {};
+
+    if (id === null)
+      return res
+        .status(400)
+        .json({ error: "El id de la reserva no es válido" });
+    if (entradas === undefined && observaciones === undefined) {
+      return res
+        .status(400)
+        .json({
+          error: "Indica las entradas o las observaciones que quieres cambiar",
+        });
+    }
+    let nuevasEntradas = null;
+    if (entradas !== undefined) {
+      nuevasEntradas = Number(entradas);
+      if (
+        String(entradas).trim() === "" ||
+        !Number.isInteger(nuevasEntradas) ||
+        nuevasEntradas < 1 ||
+        nuevasEntradas > MAX_POR_RESERVA
+      ) {
+        return res
+          .status(400)
+          .json({
+            error: `Las entradas deben ser un número entero entre 1 y ${MAX_POR_RESERVA}`,
+          });
+      }
+    }
+    if (observaciones !== undefined && typeof observaciones !== "string") {
+      return res
+        .status(400)
+        .json({ error: "Las observaciones deben ser un texto" });
+    }
+    const nota = observaciones === undefined ? null : observaciones.trim();
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      // Igual que al reservar: primero se bloquea el evento
+      const inicial = await client.query(
+        "SELECT evento_id FROM reserva WHERE id = $1",
+        [id],
+      );
+      if (!inicial.rows[0])
+        throw new ErrorDeNegocio(404, "La reserva no existe");
+      const eventoId = inicial.rows[0].evento_id;
+      const eventoFila = await client.query(
+        `SELECT e.capacidad, e.precio_base::float8 AS precio, ee.nombre AS estado
+         FROM evento e
+         JOIN estado_evento ee ON ee.id = e.estado_evento_id
+        WHERE e.id = $1
+          FOR UPDATE OF e`,
+        [eventoId],
+      );
+      const evento = eventoFila.rows[0];
+
+      const { rows } = await client.query(
+        `SELECT r.num_entradas, r.cliente_id, er.nombre AS estado
+         FROM reserva r
+         JOIN estado_reserva er ON er.id = r.estado_reserva_id
+        WHERE r.id = $1`,
+        [id],
+      );
+      const reserva = rows[0];
+      if (
+        !reserva ||
+        (req.usuario.rol === "cliente" && reserva.cliente_id !== req.usuario.id)
+      ) {
+        throw new ErrorDeNegocio(404, "La reserva no existe");
+      }
+      if (req.usuario.rol === "cliente" && reserva.estado !== "Reservada") {
+        throw new ErrorDeNegocio(
+          409,
+          "Solo puedes modificar reservas en estado Reservada",
+        );
+      }
+      if (reserva.estado === "Cancelada") {
+        throw new ErrorDeNegocio(
+          409,
+          "Una reserva cancelada no se puede modificar: primero hay que reactivarla",
+        );
+      }
+
+      let total = null;
+      if (nuevasEntradas !== null && nuevasEntradas !== reserva.num_entradas) {
+        if (nuevasEntradas > reserva.num_entradas) {
+          if (evento.estado !== "En Boletería") {
+            throw new ErrorDeNegocio(
+              409,
+              `El evento ya no está en boletería (estado: ${evento.estado}): solo se pueden bajar las entradas`,
+            );
+          }
+          // Lo que ocupan las demás reservas; la de esta persona se está cambiando
+          const ocupadasPorOtras =
+            (await entradasOcupadas(client, eventoId)) - reserva.num_entradas;
+          const maximo = evento.capacidad - ocupadasPorOtras;
+          if (nuevasEntradas > maximo) {
+            throw new ErrorDeNegocio(
+              409,
+              `Solo puedes tener hasta ${maximo} entradas en esta reserva`,
+            );
+          }
+        }
+        // El total se recalcula en el servidor
+        total = Math.round(evento.precio * nuevasEntradas * 100) / 100;
+      }
+
+      await client.query(
+        `UPDATE reserva
+          SET num_entradas = COALESCE($1, num_entradas),
+              total = COALESCE($2, total),
+              observacion = COALESCE($3, observacion)
+        WHERE id = $4`,
+        [nuevasEntradas, total, nota, id],
+      );
+      await client.query("COMMIT");
+      res.json(await obtenerReserva(id));
+    } catch (error) {
+      await client.query("ROLLBACK");
+      responderError(res, error, "No se pudo modificar la reserva");
+    } finally {
+      client.release();
+    }
+  },
+);
+
+// DELETE /api/reservas/:id — solo el agente, y solo reservas ya canceladas
+router.delete("/:id", verificarToken, exigirRol("agente"), async (req, res) => {
+  const id = idDeLaRuta(req);
+  if (id === null)
+    return res.status(400).json({ error: "El id de la reserva no es válido" });
+  try {
+    // Un solo paso: borra únicamente si la reserva está cancelada
+    const borrada = await pool.query(
+      `DELETE FROM reserva
+        WHERE id = $1
+          AND estado_reserva_id = (SELECT id FROM estado_reserva WHERE nombre = 'Cancelada')
+        RETURNING id`,
+      [id],
+    );
+    if (borrada.rows[0]) return res.json({ mensaje: "Reserva eliminada" });
+
+    const existe = await pool.query("SELECT 1 FROM reserva WHERE id = $1", [
+      id,
+    ]);
+    if (!existe.rows[0])
+      return res.status(404).json({ error: "La reserva no existe" });
+    res
+      .status(409)
+      .json({ error: "Solo se pueden eliminar reservas canceladas" });
+  } catch (error) {
+    responderError(res, error, "No se pudo eliminar la reserva");
+  }
+});
+
 export default router;
