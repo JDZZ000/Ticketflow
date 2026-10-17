@@ -5,6 +5,7 @@ import { pool } from "./db.js";
 import catalogosRoutes from "./routes/catalogos.js";
 import authRoutes from "./routes/auth.js";
 import eventosRoutes from "./routes/eventos.js";
+import reservasRoutes from "./routes/reservas.js";
 
 if (!process.env.JWT_SECRET) {
   console.error("Falta JWT_SECRET en backend/.env");
@@ -19,6 +20,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use("/api", catalogosRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/eventos", eventosRoutes);
+app.use("/api/reservas", reservasRoutes);
 
 // Comprueba que el servidor y la base de datos responden
 app.get("/api/salud", async (_req, res) => {
