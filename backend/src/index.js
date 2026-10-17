@@ -1,0 +1,26 @@
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import { pool } from "./db.js";
+
+const app = express();
+app.use(cors({ origin: ["http://localhost:8443"] }));
+app.use(express.json());
+
+// Comprueba que el servidor y la base de datos responden
+app.get("/api/salud", async (_req, res) => {
+  try {
+    const { rows } = await pool.query(
+      "SELECT COUNT(*)::int AS tablas FROM information_schema.tables WHERE table_schema = 'public'",
+    );
+    res.json({ servidor: "ok", baseDeDatos: "ok", tablas: rows[0].tablas });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ servidor: "ok", baseDeDatos: "error" });
+  }
+});
+
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`API escuchando en http://localhost:${PORT}`);
+});
