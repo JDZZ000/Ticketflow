@@ -45,6 +45,7 @@ export interface Evento {
   agente: string;
   departamento: string;
   disponibles?: number;
+  fechaFin?: string;
 }
 
 export interface Reserva {

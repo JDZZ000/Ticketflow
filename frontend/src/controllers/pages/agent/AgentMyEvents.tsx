@@ -1,7 +1,9 @@
+import { useState } from "react";
 import type { Screen, Role, Evento } from "../../../models/types";
 import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
 import { Btn } from "../../../views/components/Btn";
 import { Badge } from "../../../views/components/Badge";
+import { ConfirmarModal } from "../../../views/components/ConfirmarModal";
 import { PageHeader } from "../../../views/layouts/PageHeader";
 
 // ─── AGENT MY EVENTS ─────────────────────────────────────────────────────────
@@ -12,8 +14,9 @@ export function AgentMyEvents({
 }: {
   onNav: (s: Screen, r?: Role, eventId?: number | null) => void;
   eventos: Evento[];
-  eliminarEvento: (id: number) => void;
+  eliminarEvento: (id: number) => Promise<void>;
 }) {
+  const [porEliminar, setPorEliminar] = useState<Evento | null>(null);
   return (
     <>
       <PageHeader
@@ -78,6 +81,11 @@ export function AgentMyEvents({
                   </td>
                   <td className="px-4 py-3.5 text-sm text-gray-600">
                     {fmtDate(ev.fecha)}
+                    {ev.fechaFin && ev.fechaFin !== ev.fecha && (
+                      <span className="block text-xs text-gray-400">
+                        hasta {fmtDate(ev.fechaFin)}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3.5 text-sm font-semibold text-violet-700">
                     {fmtPrice(ev.precio)}
@@ -106,10 +114,7 @@ export function AgentMyEvents({
                         ✏️
                       </button>
                       <button
-                        onClick={() => {
-                          if (confirm(`¿Eliminar el evento "${ev.nombre}"?`))
-                            eliminarEvento(ev.id);
-                        }}
+                        onClick={() => setPorEliminar(ev)}
                         className="p-1.5 rounded-lg hover:bg-red-100 text-red-500 transition text-sm cursor-pointer"
                         title="Eliminar"
                       >
@@ -123,6 +128,15 @@ export function AgentMyEvents({
           </table>
         </div>
       </div>
+      {porEliminar && (
+        <ConfirmarModal
+          titulo="Eliminar evento"
+          mensaje={`¿Eliminar "${porEliminar.nombre}"? Esta acción no se puede deshacer. Si el evento ya tiene reservas, no se podrá eliminar.`}
+          textoConfirmar="Eliminar evento"
+          onConfirmar={() => eliminarEvento(porEliminar.id)}
+          onClose={() => setPorEliminar(null)}
+        />
+      )}
     </>
   );
 }

@@ -71,3 +71,25 @@ export async function modificarReserva(
 ): Promise<Reserva> {
   return aReserva(await api.put<ReservaApi>(`/api/reservas/${id}`, cambios));
 }
+
+// ─── Solo agentes ─────────────────────────────────────────────────────────────
+// Todas las reservas de todos los eventos
+export async function todasLasReservas(): Promise<Reserva[]> {
+  const datos = await api.get<ReservaApi[]>("/api/reservas");
+  return datos.map(aReserva);
+}
+
+// Confirmar, dejar en «Reservada» o reactivar una cancelada (esto último exige cupo)
+export async function cambiarEstadoReserva(
+  id: number,
+  estado: ReservaStatus,
+): Promise<Reserva> {
+  return aReserva(
+    await api.patch<ReservaApi>(`/api/reservas/${id}/estado`, { estado }),
+  );
+}
+
+// Solo se pueden eliminar las reservas que ya están canceladas
+export async function eliminarReserva(id: number): Promise<void> {
+  await api.delete<{ mensaje: string }>(`/api/reservas/${id}`);
+}

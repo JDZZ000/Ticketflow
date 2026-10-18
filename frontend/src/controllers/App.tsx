@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import type { Screen, Role } from "../models/types";
 import type { Reserva, ReservaStatus, Evento } from "../models/types";
 import { RESERVAS } from "../models/data/mockData";
-import { entradasDisponibles } from "../utils/cupo";
 import { LandingPage } from "./pages/auth/LandingPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
@@ -19,12 +18,21 @@ import { AgentMyEvents } from "./pages/agent/AgentMyEvents";
 import { AgentReservations } from "./pages/agent/AgentReservations";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { obtenerPerfil, type UsuarioActual } from "../models/api/auth";
-import { listarEventos } from "../models/api/eventos";
+import {
+  listarEventos,
+  crearEvento,
+  modificarEvento,
+  eliminarEvento as eliminarEventoApi,
+  type DatosEvento,
+} from "../models/api/eventos";
 import {
   misReservas,
   crearReserva as crearReservaApi,
   cancelarReserva as cancelarReservaApi,
   modificarReserva as modificarReservaApi,
+  todasLasReservas,
+  cambiarEstadoReserva as cambiarEstadoApi,
+  eliminarReserva as eliminarReservaApi,
 } from "../models/api/reservas";
 import { ApiError, mensajeDeError, sesion } from "../models/api/cliente";
 import { Btn } from "../views/components/Btn";
@@ -168,44 +176,50 @@ export default function App() {
     }
   }
 
-  // Cambia el estado de una reserva. Devuelve false si no se pudo: reactivar una
-  // reserva cancelada solo es posible si el evento todavía tiene cupo para ella.
-  function actualizarEstadoReserva(id: number, estado: ReservaStatus): boolean {
-    const reserva = reservas.find((r) => r.id === id);
-    if (reserva && reserva.estado === "Cancelada" && estado !== "Cancelada") {
-      const ev = eventos.find((e) => e.id === reserva.eventoId);
-      if (!ev || reserva.entradas > entradasDisponibles(ev, reservas)) {
-        return false;
-      }
-    }
-    setReservas((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, estado } : r)),
-    );
-    return true;
-  }
-  function registrarEvento(nuevo: Omit<Evento, "id" | "agente">) {
-    setEventos((prev) => [
-      ...prev,
-      {
-        ...nuevo,
-        id: Math.max(0, ...prev.map((e) => e.id)) + 1,
-        agente: usuarioActual?.nombre ?? "Desconocido",
-      },
-    ]);
-  }
-
-  function actualizarEvento(
+  // Agente: cambiar el estado de una reserva. Reactivar una cancelada exige cupo; si
+  // no hay, el servidor responde con un mensaje y la pantalla lo muestra.
+  async function cambiarEstadoReserva(
     id: number,
-    cambios: Omit<Evento, "id" | "agente">,
-  ) {
-    setEventos((prev) =>
-      prev.map((e) => (e.id === id ? { ...cambios, id, agente: e.agente } : e)),
-    );
+    estado: ReservaStatus,
+  ): Promise<void> {
+    try {
+      const actualizada = await cambiarEstadoApi(id, estado);
+      setReservas((prev) => prev.map((r) => (r.id === id ? actualizada : r)));
+    } finally {
+      refrescarEventos();
+    }
   }
 
-  function eliminarEvento(id: number) {
+  // Agente: solo se pueden eliminar las reservas ya canceladas
+  async function eliminarReserva(id: number): Promise<void> {
+    try {
+      await eliminarReservaApi(id);
+      setReservas((prev) => prev.filter((r) => r.id !== id));
+    } finally {
+      refrescarEventos();
+    }
+  }
+
+  // Agente: eventos. El código (EVT-###) y el agente los asigna el servidor.
+  async function registrarEvento(datos: DatosEvento): Promise<void> {
+    const nuevo = await crearEvento(datos);
+    setEventos((prev) => [...prev, nuevo]);
+  }
+
+  async function actualizarEvento(
+    id: number,
+    datos: DatosEvento,
+  ): Promise<void> {
+    const actualizado = await modificarEvento(id, datos);
+    setEventos((prev) => prev.map((e) => (e.id === id ? actualizado : e)));
+  }
+
+  // El servidor no deja eliminar un evento que tiene reservas
+  async function eliminarEvento(id: number): Promise<void> {
+    await eliminarEventoApi(id);
     setEventos((prev) => prev.filter((e) => e.id !== id));
   }
+
   function loginExitoso(u: UsuarioActual) {
     setUsuarioActual(u);
     // El cliente ve sus reservas reales; agentes y administrador siguen con las
@@ -213,6 +227,12 @@ export default function App() {
     if (u.role === "client") {
       setReservas([]);
       misReservas()
+        .then(setReservas)
+        .catch(() => {});
+    } else if (u.role === "agent") {
+      // El agente ve las reservas de todos los eventos
+      setReservas([]);
+      todasLasReservas()
         .then(setReservas)
         .catch(() => {});
     } else {
@@ -376,7 +396,10 @@ export default function App() {
             onNav={nav}
             reservas={reservas}
             eventos={eventos}
-            actualizarEstadoReserva={actualizarEstadoReserva}
+            cambiarEstadoReserva={cambiarEstadoReserva}
+            cancelarReserva={cancelarReserva}
+            editarReserva={editarReserva}
+            eliminarReserva={eliminarReserva}
           />
         )}
         {screen === "agent-profile" && (
