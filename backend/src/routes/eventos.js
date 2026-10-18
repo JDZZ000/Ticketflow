@@ -86,6 +86,13 @@ function validarEvento(cuerpo, { exigirFuturo }) {
   if (!ESTADOS.includes(estado)) {
     return { error: `El estado debe ser uno de: ${ESTADOS.join(", ")}` };
   }
+  // Un evento cancelado necesita su motivo: se guarda en las observaciones y sale en el reporte
+  if (
+    estado === "Cancelado" &&
+    String(c.observaciones ?? "").trim().length < 3
+  ) {
+    return { error: "Indica el motivo de la cancelación en las observaciones" };
+  }
   // La fecha de fin es opcional: si no se envía, el evento termina el mismo día que empieza
   const fechaFin = faltante(c.fechaFin) ? c.fecha : c.fechaFin;
   if (

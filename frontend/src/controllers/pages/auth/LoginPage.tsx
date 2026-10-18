@@ -19,10 +19,13 @@ export function LoginPage({
   onNav,
   loginExitoso,
   eventos,
+  aviso,
 }: {
   onNav: (s: Screen, role?: Role) => void;
   eventos: Evento[];
   loginExitoso: (u: UsuarioActual) => void;
+  // Por ejemplo: «Tu sesión expiró. Inicia sesión de nuevo.»
+  aviso?: string;
 }) {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
@@ -212,6 +215,14 @@ export function LoginPage({
 
             {/* form card */}
             <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-5">
+              {aviso && (
+                <div
+                  role="status"
+                  className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl p-3 mb-5"
+                >
+                  {aviso}
+                </div>
+              )}
               <div className="space-y-5 mb-5">
                 <Input
                   label="Correo electrónico"

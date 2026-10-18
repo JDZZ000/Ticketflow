@@ -100,6 +100,17 @@ export function AgentReservations({
               </tr>
             </thead>
             <tbody>
+              {reservas.filter((r) => eventos.some((e) => e.id === r.eventoId))
+                .length === 0 && (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="px-4 py-10 text-center text-sm text-gray-400"
+                  >
+                    Todavía no hay reservas.
+                  </td>
+                </tr>
+              )}
               {reservas
                 .filter((r) => eventos.some((e) => e.id === r.eventoId))
                 .map((r) => {

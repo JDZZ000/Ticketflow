@@ -126,6 +126,12 @@ export function AgentRegisterEvent({
       setError("Por favor, completa los campos obligatorios (marcados con *)");
       return;
     }
+    if (form.estado === "Cancelado" && form.observaciones.trim().length < 3) {
+      setError(
+        "Indica el motivo de la cancelación en el campo de observaciones",
+      );
+      return;
+    }
     if (nombre.length > 150 || teatro.length > 120) {
       setError("El nombre admite máximo 150 caracteres y el teatro, 120");
       return;
@@ -402,14 +408,23 @@ export function AgentRegisterEvent({
                   htmlFor="evento-observaciones"
                   className="text-sm font-medium text-gray-700"
                 >
-                  Observaciones
+                  {form.estado === "Cancelado"
+                    ? "Motivo de la cancelación"
+                    : "Observaciones"}
+                  {form.estado === "Cancelado" && (
+                    <span className="text-red-500"> *</span>
+                  )}
                 </label>
                 <textarea
                   id="evento-observaciones"
                   rows={2}
                   value={form.observaciones}
                   onChange={(e) => f("observaciones")(e.target.value)}
-                  placeholder="Restricciones de edad, notas importantes..."
+                  placeholder={
+                    form.estado === "Cancelado"
+                      ? "Cuéntanos por qué se cancela el evento"
+                      : "Restricciones de edad, notas importantes..."
+                  }
                   className="border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
                 />
               </div>

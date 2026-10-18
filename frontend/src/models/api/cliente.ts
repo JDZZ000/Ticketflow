@@ -9,6 +9,15 @@ const API_URL: string =
   import.meta.env?.VITE_API_URL ?? "http://localhost:4000";
 const CLAVE_TOKEN = "ticketflow.token";
 
+// Aviso que se emite cuando el servidor dice que la sesión ya no vale (el token venció)
+export const SESION_EXPIRADA = "ticketflow:sesion-expirada";
+
+// Neon apaga la base cuando pasa un rato sin uso y tarda unos segundos en despertar.
+// Las consultas (GET) que fallan por eso se repiten solas, esperando entre intentos.
+const ESPERAS_ENTRE_INTENTOS_MS = [1500, 3000];
+const esperar = (ms: number) =>
+  new Promise<void>((resolver) => setTimeout(resolver, ms));
+
 // Error de la API: guarda el código HTTP (401, 403, 409...) y un mensaje claro en español
 export class ApiError extends Error {
   status: number;
@@ -46,7 +55,7 @@ export const sesion = {
 
 type Metodo = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
-async function peticion<T>(
+async function intentar<T>(
   metodo: Metodo,
   ruta: string,
   cuerpo?: unknown,
@@ -79,6 +88,13 @@ async function peticion<T>(
   }
 
   if (!respuesta.ok) {
+    // Con una sesión abierta, un 401 significa que el token venció (las rutas de inicio de
+    // sesión y registro también responden 401 cuando los datos están mal: esas no cuentan)
+    if (respuesta.status === 401 && token && !ruta.startsWith("/api/auth/")) {
+      sesion.borrar();
+      if (typeof window !== "undefined")
+        window.dispatchEvent(new Event(SESION_EXPIRADA));
+    }
     const mensaje =
       datos &&
       typeof datos === "object" &&
@@ -89,6 +105,27 @@ async function peticion<T>(
     throw new ApiError(respuesta.status, mensaje);
   }
   return datos as T;
+}
+
+// Solo las consultas (GET) se repiten: son seguras. Crear, editar o eliminar no se repite
+// nunca por su cuenta, para no hacer dos veces lo mismo.
+async function peticion<T>(
+  metodo: Metodo,
+  ruta: string,
+  cuerpo?: unknown,
+): Promise<T> {
+  const intentos = metodo === "GET" ? ESPERAS_ENTRE_INTENTOS_MS.length + 1 : 1;
+  for (let i = 0; ; i++) {
+    try {
+      return await intentar<T>(metodo, ruta, cuerpo);
+    } catch (error) {
+      const sePuedeRepetir =
+        error instanceof ApiError &&
+        (error.status === 0 || error.status >= 500);
+      if (!sePuedeRepetir || i >= intentos - 1) throw error;
+      await esperar(ESPERAS_ENTRE_INTENTOS_MS[i]);
+    }
+  }
 }
 
 export const api = {

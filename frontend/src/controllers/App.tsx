@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Screen, Role } from "../models/types";
 import type { Reserva, ReservaStatus, Evento } from "../models/types";
 import { LandingPage } from "./pages/auth/LandingPage";
@@ -35,7 +35,12 @@ import {
   cambiarEstadoReserva as cambiarEstadoApi,
   eliminarReserva as eliminarReservaApi,
 } from "../models/api/reservas";
-import { ApiError, mensajeDeError, sesion } from "../models/api/cliente";
+import {
+  ApiError,
+  SESION_EXPIRADA,
+  mensajeDeError,
+  sesion,
+} from "../models/api/cliente";
 import { Btn } from "../views/components/Btn";
 
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
@@ -44,6 +49,23 @@ export default function App() {
   const [usuarioActual, setUsuarioActual] = useState<UsuarioActual | null>(
     null,
   );
+
+  // Si el token vence mientras se usa la página, el servidor responde 401 y se avisa aquí:
+  // se cierra la sesión y se lleva a la persona al inicio de sesión, con un mensaje.
+  const sesionActiva = useRef(false);
+  const [avisoSesion, setAvisoSesion] = useState("");
+  useEffect(() => {
+    function alExpirar() {
+      if (!sesionActiva.current) return; // sin sesión abierta no hay nada que avisar
+      sesionActiva.current = false;
+      setUsuarioActual(null);
+      setReservas([]);
+      setAvisoSesion("Tu sesión expiró. Inicia sesión de nuevo.");
+      setScreen("login");
+    }
+    window.addEventListener(SESION_EXPIRADA, alExpirar);
+    return () => window.removeEventListener(SESION_EXPIRADA, alExpirar);
+  }, []);
 
   // Si quedó una sesión guardada en el navegador, se comprueba con el servidor al abrir la página
   const [cargandoSesion, setCargandoSesion] = useState(
@@ -186,6 +208,8 @@ export default function App() {
   }
 
   function loginExitoso(u: UsuarioActual) {
+    sesionActiva.current = true;
+    setAvisoSesion("");
     setUsuarioActual(u);
     // El cliente ve sus reservas reales; agentes y administrador siguen con las
     // de ejemplo hasta que se conecten sus pantallas
@@ -216,6 +240,7 @@ export default function App() {
 
   // Cerrar sesión: se borra el token y se olvida al usuario
   function cerrarSesion() {
+    sesionActiva.current = false;
     sesion.borrar();
     setUsuarioActual(null);
     setReservas([]);
@@ -224,6 +249,7 @@ export default function App() {
   function nav(s: Screen, r?: Role, eventId?: number | null) {
     // El botón «Cerrar sesión» navega a la portada: ahí termina la sesión
     if ((s === "landing" || s === "login") && usuarioActual) cerrarSesion();
+    if (s !== "login") setAvisoSesion("");
     if (r) setRole(r);
     if (eventId !== undefined) setEventoSeleccionadoId(eventId);
     setScreen(s);
@@ -266,7 +292,12 @@ export default function App() {
     return <LandingPage onNav={nav} eventos={eventos} />;
   if (screen === "login")
     return (
-      <LoginPage onNav={nav} loginExitoso={loginExitoso} eventos={eventos} />
+      <LoginPage
+        onNav={nav}
+        loginExitoso={loginExitoso}
+        eventos={eventos}
+        aviso={avisoSesion}
+      />
     );
   if (screen === "register") return <RegisterPage onNav={nav} />;
 

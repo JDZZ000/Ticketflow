@@ -53,6 +53,17 @@ export function AgentMyEvents({
               </tr>
             </thead>
             <tbody>
+              {eventos.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="px-4 py-10 text-center text-sm text-gray-400"
+                  >
+                    Todavía no hay eventos. Registra el primero con «Nuevo
+                    evento».
+                  </td>
+                </tr>
+              )}
               {eventos.map((ev, i) => (
                 <tr
                   key={ev.id}

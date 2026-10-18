@@ -13,16 +13,48 @@ import { Badge } from "../../../views/components/Badge";
 import { mensajeDeError } from "../../../models/api/cliente";
 
 // ─── RESERVE ──────────────────────────────────────────────────────────────────
-export function ReservePage({
+export function ReservePage(props: {
+  onNav: (s: Screen, r?: Role, eventId?: number) => void;
+  eventoId: number | null;
+  eventos: Evento[];
+  reservas: Reserva[];
+  crearReserva: (
+    eventoId: number,
+    entradas: number,
+    observaciones: string,
+  ) => Promise<Reserva>;
+}) {
+  const ev =
+    props.eventos.find((e) => e.id === props.eventoId) ?? props.eventos[0];
+  // Si el evento ya no existe (por ejemplo, lo eliminó un agente), no hay nada que reservar
+  if (!ev) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
+        <p className="text-gray-600 mb-5">Este evento ya no está disponible.</p>
+        <Btn onClick={() => props.onNav("client-events")}>
+          ← Volver a eventos
+        </Btn>
+      </div>
+    );
+  }
+  return (
+    <ReservarEvento
+      onNav={props.onNav}
+      ev={ev}
+      reservas={props.reservas}
+      crearReserva={props.crearReserva}
+    />
+  );
+}
+
+function ReservarEvento({
   onNav,
-  eventoId,
-  eventos,
+  ev,
   reservas,
   crearReserva,
 }: {
   onNav: (s: Screen, r?: Role, eventId?: number) => void;
-  eventoId: number | null;
-  eventos: Evento[];
+  ev: Evento;
   reservas: Reserva[];
   // Crea la reserva en el servidor. Si no hay cupo, falla con el mensaje del servidor.
   crearReserva: (
@@ -31,7 +63,6 @@ export function ReservePage({
     observaciones: string,
   ) => Promise<Reserva>;
 }) {
-  const ev = eventos.find((e) => e.id === eventoId) ?? eventos[0];
   const [cantidad, setCantidad] = useState("1");
   const [obs, setObs] = useState("");
   const [done, setDone] = useState(false);
