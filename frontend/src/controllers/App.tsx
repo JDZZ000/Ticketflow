@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Screen, Role } from "../models/types";
 import type { Reserva, ReservaStatus, Evento } from "../models/types";
-import { EVENTOS, RESERVAS } from "../models/data/mockData";
+import { RESERVAS } from "../models/data/mockData";
 import { entradasDisponibles } from "../utils/cupo";
 import { LandingPage } from "./pages/auth/LandingPage";
 import { LoginPage } from "./pages/auth/LoginPage";
@@ -19,7 +19,9 @@ import { AgentMyEvents } from "./pages/agent/AgentMyEvents";
 import { AgentReservations } from "./pages/agent/AgentReservations";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { obtenerPerfil, type UsuarioActual } from "../models/api/auth";
-import { ApiError, sesion } from "../models/api/cliente";
+import { listarEventos } from "../models/api/eventos";
+import { ApiError, mensajeDeError, sesion } from "../models/api/cliente";
+import { Btn } from "../views/components/Btn";
 
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
 export default function App() {
@@ -77,10 +79,22 @@ export default function App() {
   const [eventoSeleccionadoId, setEventoSeleccionadoId] = useState<
     number | null
   >(null);
-  const [eventos, setEventos] = useState<Evento[]>(EVENTOS);
-  const [proximoEventoId, setProximoEventoId] = useState(
-    Math.max(0, ...EVENTOS.map((e) => e.id)) + 1,
-  );
+  // Los eventos salen de la base de datos (GET /api/eventos, público)
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [cargandoEventos, setCargandoEventos] = useState(true);
+  const [errorEventos, setErrorEventos] = useState("");
+
+  function cargarEventos() {
+    setCargandoEventos(true);
+    setErrorEventos("");
+    listarEventos()
+      .then(setEventos)
+      .catch((e: unknown) => setErrorEventos(mensajeDeError(e)))
+      .finally(() => setCargandoEventos(false));
+  }
+  useEffect(() => {
+    cargarEventos();
+  }, []);
   function actualizarPerfil(
     email: string,
     id: string,
@@ -145,11 +159,10 @@ export default function App() {
       ...prev,
       {
         ...nuevo,
-        id: proximoEventoId,
+        id: Math.max(0, ...prev.map((e) => e.id)) + 1,
         agente: usuarioActual?.nombre ?? "Desconocido",
       },
     ]);
-    setProximoEventoId((prev) => prev + 1);
   }
 
   function actualizarEvento(
@@ -196,7 +209,25 @@ export default function App() {
       ? { name: "Carlos Medina", email: "carlos@agentes.com" }
       : { name: "Laura Ríos", email: "laura@ticketflow.com" };
 
-  if (cargandoSesion)
+  if (errorEventos)
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-6"
+        style={{ fontFamily: "Outfit, sans-serif" }}
+      >
+        <div className="bg-white rounded-3xl shadow-xl max-w-md w-full p-8 text-center">
+          <p className="text-4xl mb-3">🔌</p>
+          <h1 className="text-xl font-extrabold text-gray-900 mb-2">
+            No se pudieron cargar los eventos
+          </h1>
+          <p className="text-gray-500 text-sm mb-6">{errorEventos}</p>
+          <Btn full onClick={cargarEventos}>
+            Reintentar
+          </Btn>
+        </div>
+      </div>
+    );
+  if (cargandoSesion || cargandoEventos)
     return (
       <div
         className="min-h-screen flex items-center justify-center text-gray-500"
