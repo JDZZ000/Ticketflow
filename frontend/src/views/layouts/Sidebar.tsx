@@ -40,6 +40,8 @@ export function Sidebar({
           ]
         : [
             { label: "Dashboard", screen: "admin-dashboard", icon: "📊" },
+            { label: "Usuarios", screen: "admin-users", icon: "👥" },
+            { label: "Ubicaciones", screen: "admin-locations", icon: "🗺️" },
             { label: "Perfil", screen: "admin-profile", icon: "👤" },
           ];
 

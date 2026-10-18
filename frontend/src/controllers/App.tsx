@@ -16,6 +16,8 @@ import { AgentRegisterEvent } from "./pages/agent/AgentRegisterEvent";
 import { AgentMyEvents } from "./pages/agent/AgentMyEvents";
 import { AgentReservations } from "./pages/agent/AgentReservations";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { AdminUsers } from "./pages/admin/AdminUsers";
+import { AdminLocations } from "./pages/admin/AdminLocations";
 import { obtenerPerfil, type UsuarioActual } from "../models/api/auth";
 import {
   listarEventos,
@@ -379,6 +381,10 @@ export default function App() {
   return (
     <DashboardLayout role="admin" screen={screen} onNav={nav} user={user}>
       {screen === "admin-dashboard" && <AdminDashboard />}
+      {screen === "admin-users" && (
+        <AdminUsers miId={usuarioActual?.id ?? ""} />
+      )}
+      {screen === "admin-locations" && <AdminLocations />}
       {screen === "admin-profile" && (
         <ProfilePage
           role="admin"

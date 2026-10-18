@@ -16,6 +16,8 @@ export type Screen =
   | "agent-reservations"
   | "agent-profile"
   | "admin-dashboard"
+  | "admin-users"
+  | "admin-locations"
   | "admin-profile";
 
 export type EventStatus =
