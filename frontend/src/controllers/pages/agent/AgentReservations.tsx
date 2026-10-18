@@ -8,22 +8,58 @@ import type {
 } from "../../../models/types";
 import { fmtPrice, fmtDate } from "../../../utils/format";
 import { entradasDisponibles } from "../../../utils/cupo";
+import { mensajeDeError } from "../../../models/api/cliente";
 import { Badge } from "../../../views/components/Badge";
+import { ConfirmarModal } from "../../../views/components/ConfirmarModal";
+import {
+  CancelarModal,
+  EditarModal,
+} from "../../../views/components/ReservaModales";
 import { PageHeader } from "../../../views/layouts/PageHeader";
 
 // ─── AGENT RESERVATIONS ───────────────────────────────────────────────────────
 export function AgentReservations({
-  onNav,
   reservas,
   eventos,
-  actualizarEstadoReserva,
+  cambiarEstadoReserva,
+  cancelarReserva,
+  editarReserva,
+  eliminarReserva,
 }: {
   onNav: (s: Screen, r?: Role, eventId?: number | null) => void;
   reservas: Reserva[];
   eventos: Evento[];
-  actualizarEstadoReserva: (id: number, estado: ReservaStatus) => boolean;
+  cambiarEstadoReserva: (id: number, estado: ReservaStatus) => Promise<void>;
+  cancelarReserva: (id: number, causa: string) => Promise<void>;
+  editarReserva: (
+    id: number,
+    entradas: number,
+    observaciones: string,
+  ) => Promise<void>;
+  eliminarReserva: (id: number) => Promise<void>;
 }) {
   const [aviso, setAviso] = useState("");
+  const [cancelando, setCancelando] = useState<Reserva | null>(null);
+  const [editando, setEditando] = useState<Reserva | null>(null);
+  const [eliminando, setEliminando] = useState<Reserva | null>(null);
+  const eventoDe = (r: Reserva) => eventos.find((e) => e.id === r.eventoId)!;
+
+  // Cancelar pide el motivo (en una ventana); confirmar o reactivar se hace directo.
+  // Reactivar una cancelada exige cupo: si no hay, el servidor responde con un mensaje.
+  async function cambiar(r: Reserva, nuevo: ReservaStatus) {
+    if (nuevo === r.estado) return;
+    setAviso("");
+    if (nuevo === "Cancelada") {
+      setCancelando(r);
+      return;
+    }
+    try {
+      await cambiarEstadoReserva(r.id, nuevo);
+    } catch (e) {
+      setAviso(mensajeDeError(e));
+    }
+  }
+
   return (
     <>
       <PageHeader
@@ -64,10 +100,21 @@ export function AgentReservations({
               </tr>
             </thead>
             <tbody>
+              {reservas.filter((r) => eventos.some((e) => e.id === r.eventoId))
+                .length === 0 && (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="px-4 py-10 text-center text-sm text-gray-400"
+                  >
+                    Todavía no hay reservas.
+                  </td>
+                </tr>
+              )}
               {reservas
                 .filter((r) => eventos.some((e) => e.id === r.eventoId))
                 .map((r) => {
-                  const ev = eventos.find((e) => e.id === r.eventoId)!;
+                  const ev = eventoDe(r);
                   // Una reserva cancelada solo se puede reactivar si hay cupo para ella
                   const sinCupo =
                     r.estado === "Cancelada" &&
@@ -104,17 +151,10 @@ export function AgentReservations({
                       <td className="px-4 py-3.5">
                         <select
                           value={r.estado}
-                          onChange={(e) => {
-                            const ok = actualizarEstadoReserva(
-                              r.id,
-                              e.target.value as ReservaStatus,
-                            );
-                            setAviso(
-                              ok
-                                ? ""
-                                : `No se puede reactivar la reserva #${r.id}: "${ev.nombre}" solo tiene ${entradasDisponibles(ev, reservas)} entradas disponibles y la reserva es de ${r.entradas}.`,
-                            );
-                          }}
+                          aria-label={`Estado de la reserva ${r.id}`}
+                          onChange={(e) =>
+                            cambiar(r, e.target.value as ReservaStatus)
+                          }
                           className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white"
                         >
                           {["Reservada", "Confirmada", "Cancelada"].map((s) => (
@@ -130,6 +170,24 @@ export function AgentReservations({
                             </option>
                           ))}
                         </select>
+                        <div className="mt-1.5 flex gap-3">
+                          {r.estado !== "Cancelada" && (
+                            <button
+                              onClick={() => setEditando(r)}
+                              className="text-xs text-violet-600 hover:underline cursor-pointer"
+                            >
+                              Editar
+                            </button>
+                          )}
+                          {r.estado === "Cancelada" && (
+                            <button
+                              onClick={() => setEliminando(r)}
+                              className="text-xs text-red-500 hover:underline cursor-pointer"
+                            >
+                              Eliminar
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -138,6 +196,31 @@ export function AgentReservations({
           </table>
         </div>
       </div>
+      {cancelando && (
+        <CancelarModal
+          reserva={cancelando}
+          evento={eventoDe(cancelando)}
+          onClose={() => setCancelando(null)}
+          cancelarReserva={cancelarReserva}
+        />
+      )}
+      {editando && (
+        <EditarModal
+          reserva={editando}
+          evento={eventoDe(editando)}
+          onClose={() => setEditando(null)}
+          editarReserva={editarReserva}
+        />
+      )}
+      {eliminando && (
+        <ConfirmarModal
+          titulo={`Eliminar reserva #${eliminando.id}`}
+          mensaje="Se borrará de la base de datos y dejará de aparecer en los reportes. Esta acción no se puede deshacer."
+          textoConfirmar="Eliminar reserva"
+          onConfirmar={() => eliminarReserva(eliminando.id)}
+          onClose={() => setEliminando(null)}
+        />
+      )}
     </>
   );
 }

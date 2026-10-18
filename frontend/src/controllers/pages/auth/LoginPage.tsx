@@ -11,54 +11,44 @@ import { fmtPrice, fmtDate, unsplash } from "../../../utils/format";
 import { Logo } from "../../../views/components/Logo";
 import { Btn } from "../../../views/components/Btn";
 import { Input } from "../../../views/components/Input";
+import { iniciarSesion, type UsuarioActual } from "../../../models/api/auth";
+import { mensajeDeError } from "../../../models/api/cliente";
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
 export function LoginPage({
   onNav,
-  usuarios,
   loginExitoso,
   eventos,
+  aviso,
 }: {
   onNav: (s: Screen, role?: Role) => void;
   eventos: Evento[];
-  usuarios: {
-    nombre: string;
-    email: string;
-    pass: string;
-    role: Role;
-    id: string;
-    direccion: string;
-    ciudad: string;
-    telefono: string;
-  }[];
-  loginExitoso: (u: {
-    nombre: string;
-    email: string;
-    role: Role;
-    id: string;
-    direccion: string;
-    ciudad: string;
-    telefono: string;
-  }) => void;
+  loginExitoso: (u: UsuarioActual) => void;
+  // Por ejemplo: «Tu sesión expiró. Inicia sesión de nuevo.»
+  aviso?: string;
 }) {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
+  const [enviando, setEnviando] = useState(false);
 
-  function handleLogin() {
-    if (email === "" || pass === "") {
+  // Valida con el servidor: si el correo y la contraseña son correctos, la API
+  // entrega un token y la página entra con el rol que tenga esa persona.
+  async function handleLogin() {
+    if (email.trim() === "" || pass === "") {
       setError("Por favor, completa todos los campos");
       return;
     }
     setError("");
-    const encontrado = usuarios.find(
-      (u) => u.email === email && u.pass === pass,
-    );
-    if (!encontrado) {
-      setError("Correo o contraseña incorrectos");
-      return;
+    setEnviando(true);
+    try {
+      const usuario = await iniciarSesion(email.trim(), pass);
+      loginExitoso(usuario);
+    } catch (e) {
+      setError(mensajeDeError(e));
+    } finally {
+      setEnviando(false);
     }
-    loginExitoso(encontrado);
   }
 
   return (
@@ -225,6 +215,14 @@ export function LoginPage({
 
             {/* form card */}
             <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-5">
+              {aviso && (
+                <div
+                  role="status"
+                  className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl p-3 mb-5"
+                >
+                  {aviso}
+                </div>
+              )}
               <div className="space-y-5 mb-5">
                 <Input
                   label="Correo electrónico"
@@ -247,8 +245,8 @@ export function LoginPage({
                   ¿Olvidaste tu contraseña?
                 </button>
               </div>
-              <Btn full size="lg" onClick={handleLogin}>
-                Iniciar sesión →
+              <Btn full size="lg" disabled={enviando} onClick={handleLogin}>
+                {enviando ? "Entrando…" : "Iniciar sesión →"}
               </Btn>
               <div className="mt-5 pt-5 border-t border-gray-100 text-center">
                 <p className="text-sm text-gray-500">

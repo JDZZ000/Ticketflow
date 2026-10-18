@@ -59,6 +59,9 @@ export function AgentDashboard({
             Mis eventos recientes
           </h3>
           <div className="space-y-3">
+            {eventos.length === 0 && (
+              <p className="text-sm text-gray-400">Todavía no hay eventos.</p>
+            )}
             {eventos.slice(0, 4).map((ev) => (
               <div
                 key={ev.id}
@@ -90,6 +93,9 @@ export function AgentDashboard({
             Últimas reservas
           </h3>
           <div className="space-y-3">
+            {reservasValidas.length === 0 && (
+              <p className="text-sm text-gray-400">Todavía no hay reservas.</p>
+            )}
             {reservasValidas.slice(0, 4).map((r) => {
               const ev = eventos.find((e) => e.id === r.eventoId)!;
               return (

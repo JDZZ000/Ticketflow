@@ -70,6 +70,11 @@ export function ClientDashboard({
           >
             Eventos destacados
           </h2>
+          {eventos.filter((e) => e.estado === "En Boletería").length === 0 && (
+            <p className="text-sm text-gray-400">
+              Por ahora no hay eventos en boletería.
+            </p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {eventos
               .filter((e) => e.estado === "En Boletería")
@@ -91,6 +96,11 @@ export function ClientDashboard({
             Mis últimas reservas
           </h2>
           <div className="space-y-3">
+            {myRes.length === 0 && (
+              <p className="text-sm text-gray-400">
+                Todavía no tienes reservas.
+              </p>
+            )}
             {myRes.slice(0, 3).map((r) => {
               const ev = eventos.find((e) => e.id === r.eventoId)!;
               return (

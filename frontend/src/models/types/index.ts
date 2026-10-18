@@ -16,6 +16,8 @@ export type Screen =
   | "agent-reservations"
   | "agent-profile"
   | "admin-dashboard"
+  | "admin-users"
+  | "admin-locations"
   | "admin-profile";
 
 export type EventStatus =
@@ -44,6 +46,8 @@ export interface Evento {
   observaciones: string;
   agente: string;
   departamento: string;
+  disponibles?: number;
+  fechaFin?: string;
 }
 
 export interface Reserva {

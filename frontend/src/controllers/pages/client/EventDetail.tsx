@@ -18,6 +18,16 @@ export function EventDetail({
   reservas: Reserva[];
 }) {
   const ev = eventos.find((e) => e.id === eventoId) ?? eventos[0];
+  // Si el evento ya no existe (por ejemplo, lo eliminó un agente), no hay nada que mostrar
+  if (!ev) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
+        <p className="text-gray-600 mb-5">Este evento ya no está disponible.</p>
+        <Btn onClick={() => onNav("client-events")}>← Volver a eventos</Btn>
+      </div>
+    );
+  }
+  const variosDias = ev.fechaFin !== undefined && ev.fechaFin !== ev.fecha;
   const disponibles = entradasDisponibles(ev, reservas);
   const agotado = disponibles === 0;
   return (
@@ -67,7 +77,12 @@ export function EventDetail({
               {[
                 ["🎭 Teatro", ev.teatro],
                 ["📍 Ciudad", ev.ciudad + ", " + ev.pais],
-                ["📅 Fecha", fmtDate(ev.fecha)],
+                variosDias
+                  ? [
+                      "📅 Fechas",
+                      `${fmtDate(ev.fecha)} → ${fmtDate(ev.fechaFin!)}`,
+                    ]
+                  : ["📅 Fecha", fmtDate(ev.fecha)],
                 ["🕐 Hora inicio", ev.horaInicio],
                 ["🕑 Hora fin estimada", ev.horaFin],
                 [

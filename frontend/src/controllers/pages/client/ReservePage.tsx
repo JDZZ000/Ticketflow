@@ -10,32 +10,65 @@ import {
 import { Btn } from "../../../views/components/Btn";
 import { Select } from "../../../views/components/Select";
 import { Badge } from "../../../views/components/Badge";
+import { mensajeDeError } from "../../../models/api/cliente";
 
 // ─── RESERVE ──────────────────────────────────────────────────────────────────
-export function ReservePage({
-  onNav,
-  eventoId,
-  eventos,
-  reservas,
-  crearReserva,
-}: {
+export function ReservePage(props: {
   onNav: (s: Screen, r?: Role, eventId?: number) => void;
   eventoId: number | null;
   eventos: Evento[];
   reservas: Reserva[];
-  // Devuelve false si no hay cupo suficiente (la reserva no se crea)
   crearReserva: (
     eventoId: number,
     entradas: number,
-    total: number,
     observaciones: string,
-  ) => boolean;
+  ) => Promise<Reserva>;
 }) {
-  const ev = eventos.find((e) => e.id === eventoId) ?? eventos[0];
+  const ev =
+    props.eventos.find((e) => e.id === props.eventoId) ?? props.eventos[0];
+  // Si el evento ya no existe (por ejemplo, lo eliminó un agente), no hay nada que reservar
+  if (!ev) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
+        <p className="text-gray-600 mb-5">Este evento ya no está disponible.</p>
+        <Btn onClick={() => props.onNav("client-events")}>
+          ← Volver a eventos
+        </Btn>
+      </div>
+    );
+  }
+  return (
+    <ReservarEvento
+      onNav={props.onNav}
+      ev={ev}
+      reservas={props.reservas}
+      crearReserva={props.crearReserva}
+    />
+  );
+}
+
+function ReservarEvento({
+  onNav,
+  ev,
+  reservas,
+  crearReserva,
+}: {
+  onNav: (s: Screen, r?: Role, eventId?: number) => void;
+  ev: Evento;
+  reservas: Reserva[];
+  // Crea la reserva en el servidor. Si no hay cupo, falla con el mensaje del servidor.
+  crearReserva: (
+    eventoId: number,
+    entradas: number,
+    observaciones: string,
+  ) => Promise<Reserva>;
+}) {
   const [cantidad, setCantidad] = useState("1");
   const [obs, setObs] = useState("");
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [reservaId, setReservaId] = useState<number | null>(null);
 
   // ── Cupo ──
   const disponibles = entradasDisponibles(ev, reservas);
@@ -45,20 +78,23 @@ export function ReservePage({
   const total = ev.precio * entradas;
   const pctVendido = Math.round((1 - disponibles / ev.capacidad) * 100);
 
-  function confirmar() {
+  async function confirmar() {
     if (!reservable || entradas < 1) {
       setError("Selecciona al menos una entrada.");
       return;
     }
-    const ok = crearReserva(ev.id, entradas, total, obs);
-    if (!ok) {
-      setError(
-        `No hay suficientes entradas disponibles. Quedan ${disponibles}.`,
-      );
-      return;
-    }
     setError("");
-    setDone(true);
+    setEnviando(true);
+    try {
+      // El total lo calcula el servidor (precio × entradas) y él decide si hay cupo
+      const nueva = await crearReserva(ev.id, entradas, obs);
+      setReservaId(nueva.id);
+      setDone(true);
+    } catch (e) {
+      setError(mensajeDeError(e));
+    } finally {
+      setEnviando(false);
+    }
   }
 
   if (done)
@@ -74,7 +110,7 @@ export function ReservePage({
           ¡Reserva realizada!
         </h2>
         <p className="text-gray-500 mb-8">
-          Tu reserva #1006 ha sido registrada exitosamente.
+          Tu reserva #{reservaId} ha sido registrada exitosamente.
         </p>
         <div className="flex gap-4">
           <Btn onClick={() => onNav("client-reservations")}>
@@ -238,10 +274,14 @@ export function ReservePage({
               <Btn
                 full
                 size="lg"
-                disabled={!reservable || entradas < 1}
+                disabled={!reservable || entradas < 1 || enviando}
                 onClick={confirmar}
               >
-                {disponibles === 0 ? "Agotado" : "Confirmar reserva"}
+                {enviando
+                  ? "Reservando…"
+                  : disponibles === 0
+                    ? "Agotado"
+                    : "Confirmar reserva"}
               </Btn>
               <Btn
                 full
