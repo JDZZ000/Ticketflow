@@ -44,6 +44,7 @@ export interface Evento {
   observaciones: string;
   agente: string;
   departamento: string;
+  disponibles?: number;
 }
 
 export interface Reserva {

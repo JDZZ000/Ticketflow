@@ -20,6 +20,12 @@ import { AgentReservations } from "./pages/agent/AgentReservations";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { obtenerPerfil, type UsuarioActual } from "../models/api/auth";
 import { listarEventos } from "../models/api/eventos";
+import {
+  misReservas,
+  crearReserva as crearReservaApi,
+  cancelarReserva as cancelarReservaApi,
+  modificarReserva as modificarReservaApi,
+} from "../models/api/reservas";
 import { ApiError, mensajeDeError, sesion } from "../models/api/cliente";
 import { Btn } from "../views/components/Btn";
 
@@ -95,6 +101,14 @@ export default function App() {
   useEffect(() => {
     cargarEventos();
   }, []);
+
+  // Vuelve a pedir los eventos sin pantalla de carga, para que las entradas
+  // disponibles reflejen lo que acaba de pasar con las reservas
+  function refrescarEventos() {
+    listarEventos()
+      .then(setEventos)
+      .catch(() => {});
+  }
   function actualizarPerfil(
     email: string,
     id: string,
@@ -113,30 +127,45 @@ export default function App() {
         : prev,
     );
   }
-  function crearReserva(
+  // Reservas del cliente: las hace el servidor, que calcula el total y valida el
+  // cupo dentro de una transacción. Si falla, el error llega a la pantalla.
+  async function crearReserva(
     eventoId: number,
     entradas: number,
-    total: number,
     observaciones: string,
-  ): boolean {
-    // Validación de cupo: nunca se reserva más de lo que queda disponible
-    const ev = eventos.find((e) => e.id === eventoId);
-    if (!ev || entradas < 1 || entradas > entradasDisponibles(ev, reservas)) {
-      return false;
+  ): Promise<Reserva> {
+    try {
+      const nueva = await crearReservaApi(eventoId, entradas, observaciones);
+      setReservas((prev) => [nueva, ...prev]);
+      return nueva;
+    } finally {
+      refrescarEventos();
     }
-    const nuevoId = Math.max(0, ...reservas.map((r) => r.id)) + 1;
-    const nueva: Reserva = {
-      id: nuevoId,
-      eventoId,
-      cliente: usuarioActual?.nombre ?? "Invitado",
-      fechaReserva: new Date().toISOString().slice(0, 10),
-      entradas,
-      total,
-      estado: "Reservada",
-      observaciones,
-    };
-    setReservas((prev) => [...prev, nueva]);
-    return true;
+  }
+
+  async function cancelarReserva(id: number, causa: string): Promise<void> {
+    try {
+      const actualizada = await cancelarReservaApi(id, causa);
+      setReservas((prev) => prev.map((r) => (r.id === id ? actualizada : r)));
+    } finally {
+      refrescarEventos();
+    }
+  }
+
+  async function editarReserva(
+    id: number,
+    entradas: number,
+    observaciones: string,
+  ): Promise<void> {
+    try {
+      const actualizada = await modificarReservaApi(id, {
+        entradas,
+        observaciones,
+      });
+      setReservas((prev) => prev.map((r) => (r.id === id ? actualizada : r)));
+    } finally {
+      refrescarEventos();
+    }
   }
 
   // Cambia el estado de una reserva. Devuelve false si no se pudo: reactivar una
@@ -179,6 +208,16 @@ export default function App() {
   }
   function loginExitoso(u: UsuarioActual) {
     setUsuarioActual(u);
+    // El cliente ve sus reservas reales; agentes y administrador siguen con las
+    // de ejemplo hasta que se conecten sus pantallas
+    if (u.role === "client") {
+      setReservas([]);
+      misReservas()
+        .then(setReservas)
+        .catch(() => {});
+    } else {
+      setReservas(RESERVAS);
+    }
     const destino =
       u.role === "agent"
         ? "agent-dashboard"
@@ -193,6 +232,7 @@ export default function App() {
   function cerrarSesion() {
     sesion.borrar();
     setUsuarioActual(null);
+    setReservas(RESERVAS);
   }
 
   function nav(s: Screen, r?: Role, eventId?: number | null) {
@@ -287,7 +327,8 @@ export default function App() {
             user={usuarioActual}
             reservas={reservas}
             eventos={eventos}
-            actualizarEstadoReserva={actualizarEstadoReserva}
+            cancelarReserva={cancelarReserva}
+            editarReserva={editarReserva}
           />
         )}
         {screen === "client-profile" && (

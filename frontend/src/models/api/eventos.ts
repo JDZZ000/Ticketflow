@@ -45,6 +45,8 @@ function aEvento(e: EventoApi): Evento {
     imagen: e.imagen ?? "",
     observaciones: e.observaciones ?? "",
     agente: e.agente,
+    // Entradas que quedan, calculadas por el servidor con TODAS las reservas
+    disponibles: e.disponibles,
   };
 }
 
