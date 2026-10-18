@@ -1,10 +1,12 @@
-import type { Evento, Reserva, Role } from "../../../models/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PRIMARY, PRIMARY_L } from "../../../utils/theme";
 import { fmtPrice, fmtDate, fmtM } from "../../../utils/format";
 import { Badge } from "../../../views/components/Badge";
+import { Btn } from "../../../views/components/Btn";
 import { StatCard } from "../../../views/components/StatCard";
 import { PageHeader } from "../../../views/layouts/PageHeader";
+import { mensajeDeError } from "../../../models/api/cliente";
+import { cargarReportes, type Reportes } from "../../../models/api/reportes";
 import {
   BarChart,
   Bar,
@@ -22,6 +24,8 @@ import {
 } from "recharts";
 
 // ─── ADMIN DASHBOARD ──────────────────────────────────────────────────────────
+// Todo sale de los 9 reportes de la API (solo el administrador puede pedirlos).
+const ANIO = 2026;
 const MESES = [
   "Ene",
   "Feb",
@@ -66,106 +70,211 @@ function crearPaleta() {
 const colorCiudad = crearPaleta();
 const colorEvento = crearPaleta();
 
-export function AdminDashboard({
-  eventos,
-  reservas,
-  usuarios,
+const acortar = (texto: string, max = 15) =>
+  texto.length > max ? texto.slice(0, max) + "…" : texto;
+
+function Tarjeta({
+  titulo,
+  subtitulo,
+  children,
 }: {
-  eventos: Evento[];
-  reservas: Reserva[];
-  usuarios: { role: Role }[];
+  titulo: string;
+  subtitulo?: string;
+  children: React.ReactNode;
 }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <h3
+        className="text-lg font-extrabold text-gray-800 mb-1"
+        style={{ fontFamily: "Outfit, sans-serif" }}
+      >
+        {titulo}
+      </h3>
+      {subtitulo ? (
+        <p className="text-xs text-gray-400 mb-4">{subtitulo}</p>
+      ) : (
+        <div className="mb-4" />
+      )}
+      {children}
+    </div>
+  );
+}
+
+function Tabla({
+  cabeceras,
+  filas,
+  derecha = [],
+}: {
+  cabeceras: string[];
+  filas: React.ReactNode[][];
+  derecha?: number[];
+}) {
+  if (filas.length === 0)
+    return <p className="text-sm text-gray-400">Sin datos para mostrar.</p>;
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-xs text-gray-400 border-b border-gray-100">
+            {cabeceras.map((h, i) => (
+              <th
+                key={h}
+                className={`pb-2 pr-3 font-semibold ${derecha.includes(i) ? "text-right" : "text-left"}`}
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {filas.map((fila, i) => (
+            <tr
+              key={i}
+              className="border-b border-gray-50 hover:bg-violet-50/30"
+            >
+              {fila.map((celda, j) => (
+                <td
+                  key={j}
+                  className={`py-2 pr-3 text-gray-700 ${derecha.includes(j) ? "text-right" : "text-left"}`}
+                >
+                  {celda}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export function AdminDashboard() {
   const [tab, setTab] = useState<"comercial" | "cobertura" | "operacion">(
     "comercial",
   );
-  const reservasPorEvento = eventos.map((ev) => ({
-    evento: ev.nombre.length > 15 ? ev.nombre.slice(0, 15) + "…" : ev.nombre,
-    reservas: reservas.filter((r) => r.eventoId === ev.id).length,
-  }));
+  const [datos, setDatos] = useState<Reportes | null>(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
 
-  const ciudadesUnicas = Array.from(new Set(eventos.map((e) => e.ciudad)));
-  const eventosPorCiudad = ciudadesUnicas.map((ciudad) => ({
-    name: ciudad,
-    value: eventos.filter((e) => e.ciudad === ciudad).length,
-  }));
-
-  const reservasPorMes = MESES.map((mes, i) => ({
-    mes,
-    reservas: reservas.filter(
-      (r) => parseInt(r.fechaReserva.split("-")[1], 10) - 1 === i,
-    ).length,
-  }));
-
-  const ingresosMensuales = MESES.map((mes, i) => ({
-    mes,
-    ingresos: reservas
-      .filter(
-        (r) =>
-          r.estado === "Confirmada" &&
-          parseInt(r.fechaReserva.split("-")[1], 10) - 1 === i,
-      )
-      .reduce((suma, r) => suma + r.total, 0),
-  }));
-
-  const agentesUnicos = Array.from(new Set(eventos.map((e) => e.agente)));
-  const eventosAgente = agentesUnicos.map((agente) => {
-    const eventosDeEsteAgente = eventos.filter((e) => e.agente === agente);
-    const ciudades = Array.from(
-      new Set(eventosDeEsteAgente.map((e) => e.ciudad)),
-    );
-    return {
-      agente,
-      eventos: eventosDeEsteAgente.length,
-      ciudad: ciudades.join(", "),
-    };
-  });
-  function agruparPor(campo: "pais" | "departamento" | "ciudad") {
-    const valores = Array.from(new Set(eventos.map((e) => e[campo])));
-    return valores.map((v) => ({
-      nombre: v,
-      eventos: eventos.filter((e) => e[campo] === v).length,
-    }));
+  function cargar() {
+    setCargando(true);
+    setError("");
+    cargarReportes(ANIO)
+      .then(setDatos)
+      .catch((e: unknown) => setError(mensajeDeError(e)))
+      .finally(() => setCargando(false));
   }
+  useEffect(() => {
+    cargar();
+  }, []);
+
+  const encabezado = (
+    <PageHeader
+      title="Panel Administrativo"
+      subtitle="Estadísticas y reportes de la plataforma"
+      actions={
+        <Btn variant="outline" size="sm" disabled={cargando} onClick={cargar}>
+          {cargando ? "Actualizando…" : "↻ Actualizar"}
+        </Btn>
+      }
+    />
+  );
+
+  if (!datos) {
+    return (
+      <>
+        {encabezado}
+        {cargando && (
+          <p className="text-sm text-gray-400">Cargando reportes…</p>
+        )}
+        {error && (
+          <p role="alert" className="text-sm text-red-500">
+            {error}{" "}
+            <button
+              className="underline font-semibold cursor-pointer"
+              onClick={cargar}
+            >
+              Reintentar
+            </button>
+          </p>
+        )}
+      </>
+    );
+  }
+
+  const {
+    resumen,
+    ingresosPorMes,
+    reservasPorEvento,
+    eventosPorAgente,
+    promedioAgente,
+    promedioCliente,
+    cobertura,
+    historial,
+    cancelaciones,
+  } = datos;
+
+  // Datos con la forma que piden las gráficas
+  const ingresosMensuales = ingresosPorMes.map((m) => ({
+    mes: MESES[m.mes - 1],
+    ingresos: m.ingresos,
+  }));
+  const reservasPorMes = ingresosPorMes.map((m) => ({
+    mes: MESES[m.mes - 1],
+    reservas: m.reservas,
+  }));
+  const reservasPorEventoTotal = reservasPorEvento.map((e) => ({
+    evento: acortar(e.evento),
+    reservas: e.total,
+  }));
+  const eventosPorCiudad = cobertura.ciudades.map((c) => ({
+    name: c.nombre,
+    value: c.eventos,
+  }));
+  const totalEventos = resumen.eventos || 1;
+
   return (
     <>
-      <PageHeader
-        title="Panel Administrativo"
-        subtitle="Estadísticas y reportes de la plataforma"
-      />
+      {encabezado}
+      {error && (
+        <p role="alert" className="text-sm text-red-500 mb-4">
+          No se pudo actualizar: {error}
+        </p>
+      )}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5 mb-8">
         <StatCard
           label="Clientes registrados"
-          value={usuarios.filter((u) => u.role === "client").length}
+          value={resumen.clientes}
           icon="👤"
           color="violet"
         />
         <StatCard
           label="Agentes registrados"
-          value={usuarios.filter((u) => u.role === "agent").length}
+          value={resumen.agentes}
           icon="🎭"
           color="blue"
         />
         <StatCard
           label="Administradores"
-          value={usuarios.filter((u) => u.role === "admin").length}
+          value={resumen.administradores}
           icon="🛡️"
           color="rose"
         />
         <StatCard
           label="Reservas totales"
-          value={reservas.length}
+          value={resumen.reservas}
           icon="🎫"
           color="emerald"
         />
         <StatCard
           label="Eventos registrados"
-          value={eventos.length}
+          value={resumen.eventos}
           icon="📅"
           color="amber"
         />
       </div>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         {(
           [
             ["comercial", "📊 Reportes Comerciales"],
@@ -193,16 +302,10 @@ export function AdminDashboard({
       {tab === "comercial" && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h3
-                className="text-lg font-extrabold text-gray-800 mb-1"
-                style={{ fontFamily: "Outfit, sans-serif" }}
-              >
-                Ingresos totales por mes — 2026
-              </h3>
-              <p className="text-xs text-gray-400 mb-4">
-                Suma de reservas confirmadas
-              </p>
+            <Tarjeta
+              titulo={`Ingresos totales por mes — ${ANIO}`}
+              subtitulo="Suma de reservas confirmadas"
+            >
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={ingresosMensuales}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
@@ -222,48 +325,56 @@ export function AdminDashboard({
                   />
                 </LineChart>
               </ResponsiveContainer>
-            </div>
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h3
-                className="text-lg font-extrabold text-gray-800 mb-1"
-                style={{ fontFamily: "Outfit, sans-serif" }}
-              >
-                Reservas por evento
-              </h3>
-              <p className="text-xs text-gray-400 mb-4">
-                Número total de reservas por espectáculo
-              </p>
+            </Tarjeta>
+            <Tarjeta
+              titulo="Reservas por evento"
+              subtitulo={`Número total de reservas por espectáculo en ${ANIO}`}
+            >
               <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={reservasPorEvento}>
+                <BarChart data={reservasPorEventoTotal}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
                   <XAxis dataKey="evento" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                   <Tooltip />
                   <Bar dataKey="reservas" radius={[4, 4, 0, 0]}>
-                    {reservasPorEvento.map((d) => (
+                    {reservasPorEventoTotal.map((d) => (
                       <Cell key={d.evento} fill={colorEvento(d.evento)} />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-            </div>
+            </Tarjeta>
           </div>
+
+          <Tarjeta
+            titulo={`Reservas por evento y por mes — ${ANIO}`}
+            subtitulo="Cada fila es un evento; cada columna, el mes en que se hizo la reserva"
+          >
+            <Tabla
+              cabeceras={["Evento", ...MESES, "Total"]}
+              derecha={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]}
+              filas={reservasPorEvento.map((e) => [
+                <span key="n" className="font-medium text-gray-800">
+                  {e.evento}
+                </span>,
+                ...e.meses.map((n) => (n === 0 ? "·" : n)),
+                <span key="t" className="font-bold text-violet-700">
+                  {e.total}
+                </span>,
+              ])}
+            />
+          </Tarjeta>
+
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h3
-                className="text-lg font-extrabold text-gray-800 mb-1"
-                style={{ fontFamily: "Outfit, sans-serif" }}
-              >
-                Reservas totales por mes — 2026
-              </h3>
-              <p className="text-xs text-gray-400 mb-4">
-                Volumen mensual de reservas en la plataforma
-              </p>
+            <Tarjeta
+              titulo={`Reservas totales por mes — ${ANIO}`}
+              subtitulo="Volumen mensual de reservas en la plataforma"
+            >
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={reservasPorMes}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
                   <XAxis dataKey="mes" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                   <Tooltip />
                   <Bar
                     dataKey="reservas"
@@ -272,37 +383,82 @@ export function AdminDashboard({
                   />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h3
-                className="text-xl font-extrabold text-gray-800 mb-4"
-                style={{ fontFamily: "Outfit, sans-serif" }}
-              >
-                Eventos por agente
-              </h3>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-xs text-gray-400 border-b border-gray-100">
-                    <th className="pb-2 text-left font-semibold">Agente</th>
-                    <th className="pb-2 text-left font-semibold">Ciudad</th>
-                    <th className="pb-2 text-right font-semibold">Eventos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {eventosAgente.map((a) => (
-                    <tr key={a.agente} className="border-b border-gray-50">
-                      <td className="py-2 font-medium text-gray-800">
-                        {a.agente}
-                      </td>
-                      <td className="py-2 text-gray-500">{a.ciudad}</td>
-                      <td className="py-2 text-right font-bold text-violet-600">
-                        {a.eventos}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            </Tarjeta>
+            <Tarjeta
+              titulo="Eventos por agente y por ciudad"
+              subtitulo="Eventos creados por cada agente en cada ciudad"
+            >
+              <Tabla
+                cabeceras={["Agente", "Ciudad", "Eventos"]}
+                derecha={[2]}
+                filas={eventosPorAgente.porAgenteYCiudad.map((a) => [
+                  <span key="a" className="font-medium text-gray-800">
+                    {a.agente}
+                  </span>,
+                  a.ciudad,
+                  <span key="e" className="font-bold text-violet-600">
+                    {a.eventos}
+                  </span>,
+                ])}
+              />
+              <p className="text-xs text-gray-500 mt-3">
+                Total por agente:{" "}
+                {eventosPorAgente.porAgente
+                  .map((a) => `${a.agente} (${a.eventos})`)
+                  .join(" · ") || "—"}
+              </p>
+            </Tarjeta>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <Tarjeta
+              titulo="Promedio de ingresos por agente"
+              subtitulo="Solo cuentan las reservas confirmadas de sus eventos"
+            >
+              <Tabla
+                cabeceras={[
+                  "Agente",
+                  "Eventos",
+                  "Confirmadas",
+                  "Ingresos",
+                  "Por reserva",
+                  "Por evento",
+                ]}
+                derecha={[1, 2, 3, 4, 5]}
+                filas={promedioAgente.map((a) => [
+                  <span key="a" className="font-medium text-gray-800">
+                    {a.agente}
+                  </span>,
+                  a.eventos,
+                  a.reservasConfirmadas,
+                  fmtPrice(a.ingresosTotales),
+                  fmtPrice(a.promedioPorReserva),
+                  fmtPrice(a.promedioPorEvento),
+                ])}
+              />
+            </Tarjeta>
+            <Tarjeta
+              titulo="Promedio de ingresos por cliente"
+              subtitulo="Solo cuentan sus reservas confirmadas"
+            >
+              <Tabla
+                cabeceras={[
+                  "Cliente",
+                  "Confirmadas",
+                  "Ingresos",
+                  "Por reserva",
+                ]}
+                derecha={[1, 2, 3]}
+                filas={promedioCliente.map((c) => [
+                  <span key="c" className="font-medium text-gray-800">
+                    {c.cliente}
+                  </span>,
+                  c.reservasConfirmadas,
+                  fmtPrice(c.ingresosTotales),
+                  fmtPrice(c.promedioPorReserva),
+                ])}
+              />
+            </Tarjeta>
           </div>
         </div>
       )}
@@ -310,63 +466,54 @@ export function AdminDashboard({
       {tab === "cobertura" && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h3
-                className="text-xl font-extrabold text-gray-800 mb-4"
-                style={{ fontFamily: "Outfit, sans-serif" }}
-              >
-                Eventos por ciudad
-              </h3>
-              <ResponsiveContainer width="100%" height={320}>
-                <PieChart>
-                  <Pie
-                    data={eventosPorCiudad}
-                    cx="50%"
-                    cy="42%"
-                    outerRadius={95}
-                    dataKey="value"
-                  >
-                    {eventosPorCiudad.map((c) => (
-                      <Cell key={c.name} fill={colorCiudad(c.name)} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend
-                    verticalAlign="bottom"
-                    iconType="circle"
-                    wrapperStyle={{ paddingTop: 16 }}
-                    formatter={(value) => (
-                      <span className="text-sm text-gray-700">
-                        {value}:{" "}
-                        {eventosPorCiudad.find((c) => c.name === value)?.value}
-                      </span>
-                    )}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h3
-                className="text-xl font-extrabold text-gray-800 mb-4"
-                style={{ fontFamily: "Outfit, sans-serif" }}
-              >
-                Cobertura geográfica
-              </h3>
+            <Tarjeta titulo="Eventos por ciudad">
+              {eventosPorCiudad.length === 0 ? (
+                <p className="text-sm text-gray-400">Sin datos para mostrar.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={320}>
+                  <PieChart>
+                    <Pie
+                      data={eventosPorCiudad}
+                      cx="50%"
+                      cy="42%"
+                      outerRadius={95}
+                      dataKey="value"
+                    >
+                      {eventosPorCiudad.map((c) => (
+                        <Cell key={c.name} fill={colorCiudad(c.name)} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend
+                      verticalAlign="bottom"
+                      iconType="circle"
+                      wrapperStyle={{ paddingTop: 16 }}
+                      formatter={(value) => (
+                        <span className="text-sm text-gray-700">
+                          {value}:{" "}
+                          {
+                            eventosPorCiudad.find((c) => c.name === value)
+                              ?.value
+                          }
+                        </span>
+                      )}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </Tarjeta>
+            <Tarjeta titulo="Cobertura geográfica">
               <div className="space-y-3">
                 {[
-                  {
-                    nivel: "País",
-                    items: agruparPor("pais"),
-                    color: "#6D28D9",
-                  },
+                  { nivel: "País", items: cobertura.paises, color: "#6D28D9" },
                   {
                     nivel: "Departamento",
-                    items: agruparPor("departamento"),
+                    items: cobertura.departamentos,
                     color: "#EC4899",
                   },
                   {
                     nivel: "Ciudad",
-                    items: agruparPor("ciudad"),
+                    items: cobertura.ciudades,
                     color: "#06B6D4",
                   },
                 ].map((g) => (
@@ -383,7 +530,7 @@ export function AdminDashboard({
                           <div
                             className="h-full rounded-full"
                             style={{
-                              width: `${(item.eventos / (eventos.length || 1)) * 100}%`,
+                              width: `${(item.eventos / totalEventos) * 100}%`,
                               background: g.color,
                             }}
                           />
@@ -402,139 +549,130 @@ export function AdminDashboard({
                   </div>
                 ))}
               </div>
-            </div>
+            </Tarjeta>
           </div>
+          <Tarjeta
+            titulo="Listado de eventos por país, departamento y ciudad"
+            subtitulo="Dónde se realiza cada evento"
+          >
+            <Tabla
+              cabeceras={[
+                "Código",
+                "Evento",
+                "País",
+                "Departamento",
+                "Ciudad",
+                "Estado",
+              ]}
+              filas={cobertura.listado.map((e) => [
+                <span key="c" className="font-mono text-xs text-gray-500">
+                  {e.codigo}
+                </span>,
+                <span key="n" className="font-medium text-gray-800">
+                  {e.nombre}
+                </span>,
+                e.pais,
+                e.departamento,
+                e.ciudad,
+                <Badge
+                  key="s"
+                  status={e.estado as Parameters<typeof Badge>[0]["status"]}
+                />,
+              ])}
+            />
+          </Tarjeta>
         </div>
       )}
 
       {tab === "operacion" && (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <h3
-              className="text-xl font-extrabold text-gray-800 mb-4"
-              style={{ fontFamily: "Outfit, sans-serif" }}
-            >
-              Historial de reservas por cliente
-            </h3>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs text-gray-400 border-b border-gray-100">
-                  {[
-                    "ID",
-                    "Cliente",
-                    "Evento",
-                    "Fecha",
-                    "Entradas",
-                    "Total",
-                    "Estado",
-                    "Observaciones",
-                  ].map((h) => (
-                    <th key={h} className="pb-3 text-left font-semibold">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {reservas
-                  .filter((r) => eventos.some((e) => e.id === r.eventoId))
-                  .map((r) => {
-                    const ev = eventos.find((e) => e.id === r.eventoId)!;
-                    return (
-                      <tr
-                        key={r.id}
-                        className="border-b border-gray-50 hover:bg-violet-50/30"
-                      >
-                        <td className="py-3 font-mono text-xs text-gray-400">
-                          #{r.id}
-                        </td>
-                        <td className="py-3 font-medium text-gray-800">
-                          {r.cliente}
-                        </td>
-                        <td className="py-3 text-gray-600 max-w-36 truncate">
-                          {ev.nombre}
-                        </td>
-                        <td className="py-3 text-gray-500">
-                          {fmtDate(r.fechaReserva)}
-                        </td>
-                        <td className="py-3 text-center font-bold text-gray-800">
-                          {r.entradas}
-                        </td>
-                        <td className="py-3 font-semibold text-violet-700">
-                          {fmtPrice(r.total)}
-                        </td>
-                        <td className="py-3">
-                          <Badge status={r.estado} />
-                        </td>
-                        <td className="py-3 text-xs text-gray-400">
-                          {r.observaciones || "—"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
+          <Tarjeta
+            titulo="Historial de reservas por cliente"
+            subtitulo="Ordenado por cliente, de la más reciente a la más antigua"
+          >
+            <Tabla
+              cabeceras={[
+                "ID",
+                "Cliente",
+                "Evento",
+                "Fecha",
+                "Entradas",
+                "Total",
+                "Estado",
+                "Observaciones",
+              ]}
+              derecha={[4, 5]}
+              filas={historial.map((r) => [
+                <span key="i" className="font-mono text-xs text-gray-400">
+                  #{r.id}
+                </span>,
+                <span key="c" className="font-medium text-gray-800">
+                  {r.cliente}
+                </span>,
+                r.evento,
+                fmtDate(r.fechaReserva),
+                <span key="e" className="font-bold text-gray-800">
+                  {r.entradas}
+                </span>,
+                <span key="t" className="font-semibold text-violet-700">
+                  {fmtPrice(r.total)}
+                </span>,
+                <Badge key="s" status={r.estado} />,
+                <span key="o" className="text-xs text-gray-400">
+                  {r.observaciones || "—"}
+                </span>,
+              ])}
+            />
+          </Tarjeta>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h3
-                className="text-xl font-extrabold text-gray-800 mb-4"
-                style={{ fontFamily: "Outfit, sans-serif" }}
-              >
-                Reservas canceladas
-              </h3>
-              {reservas
-                .filter(
-                  (r) =>
-                    r.estado === "Cancelada" &&
-                    eventos.some((e) => e.id === r.eventoId),
-                )
-                .map((r) => {
-                  const ev = eventos.find((e) => e.id === r.eventoId)!;
-                  return (
-                    <div
-                      key={r.id}
-                      className="border border-red-100 bg-red-50 rounded-xl p-4 mb-3"
-                    >
-                      <p className="font-semibold text-gray-800 text-sm">
-                        {ev.nombre}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Cliente: {r.cliente}
-                      </p>
-                      <p className="text-xs text-red-600 mt-1">
-                        Motivo: {r.observaciones || "No especificado"}
-                      </p>
-                    </div>
-                  );
-                })}
-            </div>
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h3
-                className="text-xl font-extrabold text-gray-800 mb-4"
-                style={{ fontFamily: "Outfit, sans-serif" }}
-              >
-                Eventos cancelados
-              </h3>
-              {eventos
-                .filter((e) => e.estado === "Cancelado")
-                .map((ev) => (
-                  <div
-                    key={ev.id}
-                    className="border border-red-100 bg-red-50 rounded-xl p-4 mb-3"
-                  >
-                    <p className="font-semibold text-gray-800 text-sm">
-                      {ev.nombre}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {ev.ciudad} · {fmtDate(ev.fecha)}
-                    </p>
-                    <p className="text-xs text-red-600 mt-1">
-                      Motivo: {ev.observaciones || "No especificado"}
-                    </p>
-                  </div>
-                ))}
-            </div>
+            <Tarjeta titulo="Reservas canceladas y su causa">
+              {cancelaciones.reservas.length === 0 && (
+                <p className="text-sm text-gray-400">
+                  No hay reservas canceladas.
+                </p>
+              )}
+              {cancelaciones.reservas.map((r) => (
+                <div
+                  key={r.id}
+                  className="border border-red-100 bg-red-50 rounded-xl p-4 mb-3"
+                >
+                  <p className="font-semibold text-gray-800 text-sm">
+                    {r.evento}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    #{r.id} · Cliente: {r.cliente} · {r.entradas} entrada
+                    {r.entradas > 1 ? "s" : ""} · {fmtPrice(r.total)}
+                  </p>
+                  <p className="text-xs text-red-600 mt-1">
+                    Causa: {r.causa || "No especificada"}
+                  </p>
+                </div>
+              ))}
+            </Tarjeta>
+            <Tarjeta titulo="Eventos cancelados y su causa">
+              {cancelaciones.eventos.length === 0 && (
+                <p className="text-sm text-gray-400">
+                  No hay eventos cancelados.
+                </p>
+              )}
+              {cancelaciones.eventos.map((ev) => (
+                <div
+                  key={ev.id}
+                  className="border border-red-100 bg-red-50 rounded-xl p-4 mb-3"
+                >
+                  <p className="font-semibold text-gray-800 text-sm">
+                    {ev.nombre}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {ev.codigo} · {ev.ciudad} · {fmtDate(ev.fecha)} · Agente:{" "}
+                    {ev.agente}
+                  </p>
+                  <p className="text-xs text-red-600 mt-1">
+                    Causa: {ev.causa || "No especificada"}
+                  </p>
+                </div>
+              ))}
+            </Tarjeta>
           </div>
         </div>
       )}

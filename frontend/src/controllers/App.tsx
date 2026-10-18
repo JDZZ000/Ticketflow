@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Screen, Role } from "../models/types";
 import type { Reserva, ReservaStatus, Evento } from "../models/types";
-import { RESERVAS } from "../models/data/mockData";
 import { LandingPage } from "./pages/auth/LandingPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
@@ -40,29 +39,6 @@ import { Btn } from "../views/components/Btn";
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState<Screen>("landing");
-  const [usuarios] = useState<
-    {
-      nombre: string;
-      email: string;
-      pass: string;
-      role: Role;
-      id: string;
-      direccion: string;
-      ciudad: string;
-      telefono: string;
-    }[]
-  >([
-    {
-      nombre: "Admin User",
-      email: "admin@ticketflow.com",
-      pass: "admin123",
-      role: "admin",
-      id: "39.876.543",
-      direccion: "Cra. 15 # 93-47, Of. 302",
-      ciudad: "Bogotá",
-      telefono: "+57 300 987 6543",
-    },
-  ]);
   const [usuarioActual, setUsuarioActual] = useState<UsuarioActual | null>(
     null,
   );
@@ -89,7 +65,7 @@ export default function App() {
       activo = false;
     };
   }, []);
-  const [reservas, setReservas] = useState<Reserva[]>(RESERVAS);
+  const [reservas, setReservas] = useState<Reserva[]>([]);
   const [eventoSeleccionadoId, setEventoSeleccionadoId] = useState<
     number | null
   >(null);
@@ -223,7 +199,8 @@ export default function App() {
         .then(setReservas)
         .catch(() => {});
     } else {
-      setReservas(RESERVAS);
+      // El administrador no usa la lista de reservas: sus reportes los pide el propio panel
+      setReservas([]);
     }
     const destino =
       u.role === "agent"
@@ -239,7 +216,7 @@ export default function App() {
   function cerrarSesion() {
     sesion.borrar();
     setUsuarioActual(null);
-    setReservas(RESERVAS);
+    setReservas([]);
   }
 
   function nav(s: Screen, r?: Role, eventId?: number | null) {
@@ -401,13 +378,7 @@ export default function App() {
 
   return (
     <DashboardLayout role="admin" screen={screen} onNav={nav} user={user}>
-      {screen === "admin-dashboard" && (
-        <AdminDashboard
-          eventos={eventos}
-          reservas={reservas}
-          usuarios={usuarios}
-        />
-      )}
+      {screen === "admin-dashboard" && <AdminDashboard />}
       {screen === "admin-profile" && (
         <ProfilePage
           role="admin"
