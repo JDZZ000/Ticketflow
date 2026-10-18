@@ -40,7 +40,7 @@ import { Btn } from "../views/components/Btn";
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState<Screen>("landing");
-  const [usuarios, setUsuarios] = useState<
+  const [usuarios] = useState<
     {
       nombre: string;
       email: string;
@@ -117,24 +117,11 @@ export default function App() {
       .then(setEventos)
       .catch(() => {});
   }
-  function actualizarPerfil(
-    email: string,
-    id: string,
-    direccion: string,
-    ciudad: string,
-    telefono: string,
-  ) {
-    setUsuarios((prev) =>
-      prev.map((u) =>
-        u.email === email ? { ...u, id, direccion, ciudad, telefono } : u,
-      ),
-    );
-    setUsuarioActual((prev) =>
-      prev && prev.email === email
-        ? { ...prev, id, direccion, ciudad, telefono }
-        : prev,
-    );
+  // Cuando la persona guarda su perfil, se actualizan los datos que usa el resto de la página
+  function perfilActualizado(u: UsuarioActual) {
+    setUsuarioActual(u);
   }
+
   // Reservas del cliente: las hace el servidor, que calcula el total y valida el
   // cupo dentro de una transacción. Si falla, el error llega a la pantalla.
   async function crearReserva(
@@ -355,8 +342,7 @@ export default function App() {
           <ProfilePage
             role="client"
             user={usuarioActual}
-            reservas={reservas}
-            actualizarPerfil={actualizarPerfil}
+            onPerfilActualizado={perfilActualizado}
           />
         )}
       </DashboardLayout>
@@ -406,8 +392,7 @@ export default function App() {
           <ProfilePage
             role="agent"
             user={usuarioActual}
-            reservas={reservas}
-            actualizarPerfil={actualizarPerfil}
+            onPerfilActualizado={perfilActualizado}
           />
         )}
       </DashboardLayout>
@@ -427,8 +412,7 @@ export default function App() {
         <ProfilePage
           role="admin"
           user={usuarioActual}
-          reservas={reservas}
-          actualizarPerfil={actualizarPerfil}
+          onPerfilActualizado={perfilActualizado}
         />
       )}
     </DashboardLayout>

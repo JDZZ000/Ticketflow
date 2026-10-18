@@ -24,8 +24,8 @@ export interface Ciudad {
 }
 
 // La API habla en español; la página usa client / agent / admin
-type RolApi = "cliente" | "agente" | "administrador";
-const ROL_DE_LA_API: Record<RolApi, Role> = {
+export type RolApi = "cliente" | "agente" | "administrador";
+export const ROL_DE_LA_API: Record<RolApi, Role> = {
   cliente: "client",
   agente: "agent",
   administrador: "admin",
