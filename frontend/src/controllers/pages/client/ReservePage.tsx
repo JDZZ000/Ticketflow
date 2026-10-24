@@ -24,8 +24,7 @@ export function ReservePage(props: {
     observaciones: string,
   ) => Promise<Reserva>;
 }) {
-  const ev =
-    props.eventos.find((e) => e.id === props.eventoId) ?? props.eventos[0];
+  const ev = props.eventos.find((e) => e.id === props.eventoId);
   // Si el evento ya no existe (por ejemplo, lo eliminó un agente), no hay nada que reservar
   if (!ev) {
     return (
