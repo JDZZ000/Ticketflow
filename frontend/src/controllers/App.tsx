@@ -43,6 +43,10 @@ import {
   eliminarReserva as eliminarReservaApi,
 } from "../models/api/reservas";
 import {
+  iniciarPago,
+  confirmarPago as confirmarPagoApi,
+} from "../models/api/pagos";
+import {
   ApiError,
   SESION_EXPIRADA,
   mensajeDeError,
@@ -195,8 +199,25 @@ export default function App() {
       refrescarEventos();
     }
   }
+    // Cliente: pagar una reserva. El servidor crea la sesión de pago y la página se va a
+  // Stripe; al terminar, Stripe devuelve a la persona a «Mis reservas».
+  async function pagarReserva(id: number): Promise<void> {
+    const url = await iniciarPago(id);
+    window.location.assign(url);
+  }
 
-  // Agente: cambiar el estado de una reserva. Reactivar una cancelada exige cupo; si
+  // Al volver de Stripe: el servidor comprueba el pago con Stripe y confirma la reserva.
+  // Después se recargan las reservas para que se vea su estado nuevo.
+  async function confirmarPago(sessionId: string) {
+    try {
+      return await confirmarPagoApi(sessionId);
+    } finally {
+      misReservas()
+        .then(setReservas)
+        .catch(() => {});
+    }
+  }
+    // Agente: cambiar el estado de una reserva. Reactivar una cancelada exige cupo; si
   // no hay, el servidor responde con un mensaje y la pantalla lo muestra.
   async function cambiarEstadoReserva(
     id: number,
@@ -409,6 +430,8 @@ export default function App() {
             eventos={eventos}
             cancelarReserva={cancelarReserva}
             editarReserva={editarReserva}
+            pagarReserva={pagarReserva}
+            confirmarPago={confirmarPago}
           />
         )}
         {screen === "client-profile" && (

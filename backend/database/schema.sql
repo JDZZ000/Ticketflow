@@ -37,6 +37,7 @@ CREATE TABLE estado_evento (
 CREATE TABLE estado_reserva (
     id      SERIAL PRIMARY KEY,
     nombre  VARCHAR(30) NOT NULL UNIQUE
+
 );
 
 -- ── 3. Personas y sus especializaciones (ES UNA) ─────────────────────────────
@@ -112,7 +113,9 @@ CREATE TABLE reserva (
     observacion        TEXT,
     cliente_id         VARCHAR(20) NOT NULL REFERENCES cliente (persona_id),   -- "Realiza"
     evento_id          INTEGER NOT NULL REFERENCES evento (id),                -- "Asociado"
-    estado_reserva_id  INTEGER NOT NULL REFERENCES estado_reserva (id)         -- "Posee"
+    estado_reserva_id  INTEGER NOT NULL REFERENCES estado_reserva (id),        -- "Posee"
+    stripe_session_id  TEXT,                                                   -- pago en Stripe (Checkout)
+    fecha_pago         TIMESTAMP                                               -- cuándo se confirmó el pago
 );
 
 -- ── 6. Índices para las consultas más frecuentes ─────────────────────────────
@@ -123,6 +126,7 @@ CREATE INDEX idx_evento_agente    ON evento (agente_id);
 CREATE INDEX idx_evento_estado    ON evento (estado_evento_id);
 CREATE INDEX idx_reserva_cliente  ON reserva (cliente_id);
 CREATE INDEX idx_reserva_evento   ON reserva (evento_id);
+CREATE INDEX idx_reserva_stripe   ON reserva (stripe_session_id);
 CREATE INDEX idx_reserva_estado   ON reserva (estado_reserva_id);
 
 -- ── 7. Datos de referencia (catálogos) ───────────────────────────────────────
