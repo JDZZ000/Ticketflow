@@ -17,7 +17,7 @@ export function EventDetail({
   eventos: Evento[];
   reservas: Reserva[];
 }) {
-  const ev = eventos.find((e) => e.id === eventoId) ?? eventos[0];
+  const ev = eventos.find((e) => e.id === eventoId);
   // Si el evento ya no existe (por ejemplo, lo eliminó un agente), no hay nada que mostrar
   if (!ev) {
     return (

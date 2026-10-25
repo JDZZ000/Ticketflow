@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import type { Screen, Role } from "../models/types";
+import {
+  dashboardDeRol,
+  pathToScreen,
+  rolDeScreen,
+  screenToPath,
+} from "../utils/routes";
 import type { Reserva, ReservaStatus, Evento } from "../models/types";
 import { LandingPage } from "./pages/auth/LandingPage";
 import { LoginPage } from "./pages/auth/LoginPage";
@@ -43,9 +50,37 @@ import {
 } from "../models/api/cliente";
 import { Btn } from "../views/components/Btn";
 
+// ─── 404 ──────────────────────────────────────────────────────────────────────
+function NoEncontrada({ onNav }: { onNav: (s: Screen) => void }) {
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center px-6"
+      style={{ fontFamily: "Outfit, sans-serif" }}
+    >
+      <div className="bg-white rounded-3xl shadow-xl max-w-md w-full p-8 text-center">
+        <p className="text-4xl mb-3">🎟️</p>
+        <h1 className="text-xl font-extrabold text-gray-900 mb-2">
+          Página no encontrada
+        </h1>
+        <p className="text-gray-500 text-sm mb-6">
+          La dirección que abriste no existe.
+        </p>
+        <Btn full onClick={() => onNav("landing")}>
+          Ir al inicio
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen, setScreen] = useState<Screen>("landing");
+  // La pantalla sale de la URL: cada pantalla tiene su propia dirección
+  const location = useLocation();
+  const navigate = useNavigate();
+  const ruta = pathToScreen(location.pathname);
+  const screen: Screen | null = ruta?.screen ?? null;
+  const eventoSeleccionadoId = ruta?.eventId ?? null;
   const [usuarioActual, setUsuarioActual] = useState<UsuarioActual | null>(
     null,
   );
@@ -61,7 +96,7 @@ export default function App() {
       setUsuarioActual(null);
       setReservas([]);
       setAvisoSesion("Tu sesión expiró. Inicia sesión de nuevo.");
-      setScreen("login");
+      navigate("/login");
     }
     window.addEventListener(SESION_EXPIRADA, alExpirar);
     return () => window.removeEventListener(SESION_EXPIRADA, alExpirar);
@@ -76,7 +111,8 @@ export default function App() {
     let activo = true;
     obtenerPerfil()
       .then((u) => {
-        if (activo) loginExitoso(u);
+        // Se restaura la sesión sin mover a la persona: se queda en la URL que abrió
+        if (activo) loginExitoso(u, false);
       })
       .catch((e: unknown) => {
         // Solo se descarta la sesión si el servidor dice que ya no vale (401)
@@ -90,9 +126,6 @@ export default function App() {
     };
   }, []);
   const [reservas, setReservas] = useState<Reserva[]>([]);
-  const [eventoSeleccionadoId, setEventoSeleccionadoId] = useState<
-    number | null
-  >(null);
   // Los eventos salen de la base de datos (GET /api/eventos, público)
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [cargandoEventos, setCargandoEventos] = useState(true);
@@ -207,7 +240,7 @@ export default function App() {
     setEventos((prev) => prev.filter((e) => e.id !== id));
   }
 
-  function loginExitoso(u: UsuarioActual) {
+  function loginExitoso(u: UsuarioActual, irAlInicio = true) {
     sesionActiva.current = true;
     setAvisoSesion("");
     setUsuarioActual(u);
@@ -228,13 +261,19 @@ export default function App() {
       // El administrador no usa la lista de reservas: sus reportes los pide el propio panel
       setReservas([]);
     }
-    const destino =
-      u.role === "agent"
-        ? "agent-dashboard"
-        : u.role === "admin"
-          ? "admin-dashboard"
-          : "client-dashboard";
-    setScreen(destino);
+    if (!irAlInicio) return;
+    // Si la persona fue enviada al login desde un enlace protegido, vuelve a ese enlace
+    const desde = (location.state as { from?: string } | null)?.from;
+    const destinoDesde = desde ? pathToScreen(desde) : null;
+    if (
+      desde &&
+      destinoDesde &&
+      rolDeScreen(destinoDesde.screen) === u.role
+    ) {
+      navigate(desde, { replace: true });
+    } else {
+      navigate(screenToPath(dashboardDeRol(u.role)), { replace: true });
+    }
   }
   const [role, setRole] = useState<Role>("client");
 
@@ -251,8 +290,9 @@ export default function App() {
     if ((s === "landing" || s === "login") && usuarioActual) cerrarSesion();
     if (s !== "login") setAvisoSesion("");
     if (r) setRole(r);
-    if (eventId !== undefined) setEventoSeleccionadoId(eventId);
-    setScreen(s);
+    // Sin id explícito se conserva el evento de la URL actual (ej.: volver al detalle)
+    const id = eventId !== undefined ? eventId : eventoSeleccionadoId;
+    navigate(screenToPath(s, id));
   }
 
   const user = usuarioActual
@@ -288,6 +328,29 @@ export default function App() {
         Cargando…
       </div>
     );
+
+  // URL que no existe
+  if (screen === null) return <NoEncontrada onNav={nav} />;
+
+  // Control de acceso por URL
+  const rolPantalla = rolDeScreen(screen);
+  if (rolPantalla && !usuarioActual)
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location.pathname }}
+      />
+    );
+  if (rolPantalla && usuarioActual && usuarioActual.role !== rolPantalla)
+    return (
+      <Navigate to={screenToPath(dashboardDeRol(usuarioActual.role))} replace />
+    );
+  if ((screen === "login" || screen === "register") && usuarioActual)
+    return (
+      <Navigate to={screenToPath(dashboardDeRol(usuarioActual.role))} replace />
+    );
+
   if (screen === "landing")
     return <LandingPage onNav={nav} eventos={eventos} />;
   if (screen === "login")
@@ -371,15 +434,26 @@ export default function App() {
         {screen === "agent-dashboard" && (
           <AgentDashboard onNav={nav} eventos={eventos} reservas={reservas} />
         )}
-        {screen === "agent-register-event" && (
-          <AgentRegisterEvent
-            onNav={nav}
-            eventoId={eventoSeleccionadoId}
-            eventos={eventos}
-            registrarEvento={registrarEvento}
-            actualizarEvento={actualizarEvento}
-          />
-        )}
+        {screen === "agent-register-event" &&
+          (eventoSeleccionadoId !== null &&
+          !eventos.some((e) => e.id === eventoSeleccionadoId) ? (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
+              <p className="text-gray-600 mb-5">
+                Este evento ya no está disponible.
+              </p>
+              <Btn onClick={() => nav("agent-my-events")}>
+                ← Volver a mis eventos
+              </Btn>
+            </div>
+          ) : (
+            <AgentRegisterEvent
+              onNav={nav}
+              eventoId={eventoSeleccionadoId}
+              eventos={eventos}
+              registrarEvento={registrarEvento}
+              actualizarEvento={actualizarEvento}
+            />
+          ))}
         {screen === "agent-my-events" && (
           <AgentMyEvents
             onNav={nav}
