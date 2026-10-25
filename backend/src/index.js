@@ -6,6 +6,7 @@ import catalogosRoutes from "./routes/catalogos.js";
 import authRoutes from "./routes/auth.js";
 import eventosRoutes from "./routes/eventos.js";
 import reservasRoutes from "./routes/reservas.js";
+import pagosRoutes, { webhookStripe } from "./routes/pagos.js";
 import reportesRoutes from "./routes/reportes.js";
 import perfilRoutes from "./routes/perfil.js";
 import personasRoutes from "./routes/personas.js";
@@ -18,12 +19,21 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 app.use(cors({ origin: ["http://localhost:8443"] }));
 // Límite alto porque un evento puede traer una imagen subida (en base64)
+
+// El webhook de Stripe tiene que ir ANTES de express.json(): Stripe firma el cuerpo tal
+// cual lo manda, y la firma solo se puede comprobar si el cuerpo no se ha procesado.
+app.post(
+  "/api/pagos/webhook",
+  express.raw({ type: "application/json" }),
+  webhookStripe,
+);
 app.use(express.json({ limit: "10mb" }));
 
 app.use("/api", catalogosRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/eventos", eventosRoutes);
 app.use("/api/reservas", reservasRoutes);
+app.use("/api/pagos", pagosRoutes);
 app.use("/api/reportes", reportesRoutes);
 app.use("/api/perfil", perfilRoutes);
 app.use("/api/personas", personasRoutes);
