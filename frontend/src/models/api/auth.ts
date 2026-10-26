@@ -103,6 +103,17 @@ export async function registrar(datos: DatosRegistro): Promise<void> {
 export function listarCiudades(): Promise<Ciudad[]> {
   return api.get<Ciudad[]>("/api/ciudades");
 }
+export async function solicitarRecuperacion(correo: string): Promise<string> {
+const r = await api.post<{ mensaje: string }>("/api/auth/recuperar", { correo });
+return r.mensaje;
+}
+export async function restablecerContrasena(token: string, contrasena: string): Promise<string> {
+const r = await api.post<{ mensaje: string }>("/api/auth/restablecer", {
+token,
+contrasena,
+});
+return r.mensaje;
+}
 
 // Texto que se muestra en las listas: «Bogotá, Cundinamarca»
 export const etiquetaCiudad = (c: Ciudad): string =>
