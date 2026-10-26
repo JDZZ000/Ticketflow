@@ -16,15 +16,20 @@ function firmarToken(usuario) {
     { expiresIn: "8h" },
   );
 }
+
 const sha256 = (texto) => crypto.createHash("sha256").update(texto).digest("hex");
+
+// Respuesta única de /recuperar: es la misma exista o no el correo
 const RESPUESTA = {
-mensaje:
-"Si el correo está registrado, te enviamos las instrucciones para recuperar tu contraseña.",
+  mensaje:
+    "Si el correo está registrado, te enviamos las instrucciones para recuperar tu contraseña.",
 };
+
 function enviarEnlace(correo, enlace) {
-// Modo desarrollo: el enlace se imprime en la consola del servidor
-console.log(`[recuperación] ${correo}: ${enlace}`);
+  // Modo desarrollo: el enlace se imprime en la consola del servidor
+  console.log(`[recuperación] ${correo}: ${enlace}`);
 }
+
 // POST /api/auth/registro
 router.post("/registro", async (req, res) => {
   const {
@@ -161,44 +166,89 @@ router.post("/login", async (req, res) => {
       correo: fila.correo,
       rol: fila.rol,
     };
-    router.post("/recuperar", async (req, res) => {
-const correo = String(req.body?.correo ?? "").trim().toLowerCase();
-if (!/^\S+@\S+\.\S+$/.test(correo)) {
-return res.status(400).json({ error: "Escribe un correo válido" });
-}
-try {
-// Solo clientes y agentes (el administrador lo restablece otro administrador)
-const { rows } = await pool.query(
-`SELECT p.identificacion FROM persona p
-WHERE p.correo = $1
-AND (EXISTS (SELECT 1 FROM cliente WHERE persona_id = p.identificacion)
-OR EXISTS (SELECT 1 FROM agente WHERE persona_id = p.identificacion))`,
-[correo],
-);
-if (rows[0]) {
-const token = crypto.randomBytes(32).toString("hex"); // 64 caracteres
-await pool.query(
-"UPDATE recuperacion_contrasena SET usado = TRUE WHERE persona_id = $1 AND usado = FALSE",
-[rows[0].identificacion],
-);
-await pool.query(
-`INSERT INTO recuperacion_contrasena (persona_id, token_hash, expira)
-VALUES ($1, $2, NOW() + INTERVAL '30 minutes')`,
-[rows[0].identificacion, sha256(token)],
-);
-const base = process.env.APP_URL ?? "http://localhost:8443";
-enviarEnlace(correo, `${base}/restablecer?token=${token}`);
-}
-res.json(RESPUESTA); // la misma respuesta exista o no el correo
-} catch (error) {
-console.error(error);
-res.status(500).json({ error: "No se pudo procesar la solicitud" });
-}
-});
     res.json({ token: firmarToken(usuario), usuario });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "No se pudo iniciar sesión" });
+  }
+});
+
+// POST /api/auth/recuperar
+router.post("/recuperar", async (req, res) => {
+  const correo = String(req.body?.correo ?? "").trim().toLowerCase();
+  if (!/^\S+@\S+\.\S+$/.test(correo)) {
+    return res.status(400).json({ error: "Escribe un correo válido" });
+  }
+  try {
+    // Solo clientes y agentes (el administrador lo restablece otro administrador)
+    const { rows } = await pool.query(
+      `SELECT p.identificacion FROM persona p
+        WHERE p.correo = $1
+          AND (EXISTS (SELECT 1 FROM cliente WHERE persona_id = p.identificacion)
+            OR EXISTS (SELECT 1 FROM agente  WHERE persona_id = p.identificacion))`,
+      [correo],
+    );
+    if (rows[0]) {
+      const token = crypto.randomBytes(32).toString("hex");   // 64 caracteres
+      await pool.query(
+        "UPDATE recuperacion_contrasena SET usado = TRUE WHERE persona_id = $1 AND usado = FALSE",
+        [rows[0].identificacion],
+      );
+      await pool.query(
+        `INSERT INTO recuperacion_contrasena (persona_id, token_hash, expira)
+         VALUES ($1, $2, NOW() + INTERVAL '30 minutes')`,
+        [rows[0].identificacion, sha256(token)],
+      );
+      const base = process.env.APP_URL ?? "http://localhost:8443";
+      enviarEnlace(correo, `${base}/restablecer?token=${token}`);
+    }
+    res.json(RESPUESTA);          // la misma respuesta exista o no el correo
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "No se pudo procesar la solicitud" });
+  }
+});
+
+// POST /api/auth/restablecer
+router.post("/restablecer", async (req, res) => {
+  const { token, contrasena } = req.body ?? {};
+  const INVALIDO = "El enlace no es válido o ya expiró";
+  if (typeof token !== "string" || token.length !== 64) {
+    return res.status(400).json({ error: INVALIDO });
+  }
+  if (typeof contrasena !== "string" || contrasena.length < 6) {
+    return res.status(400).json({ error: "La contraseña debe tener al menos 6 caracteres" });
+  }
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rows } = await client.query(
+      `SELECT persona_id FROM recuperacion_contrasena
+        WHERE token_hash = $1 AND usado = FALSE AND expira > NOW()
+          FOR UPDATE`,
+      [sha256(token)],
+    );
+    if (!rows[0]) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: INVALIDO });
+    }
+    const hash = await bcrypt.hash(contrasena, 10);
+    await client.query(
+      "UPDATE persona SET contrasena = $1 WHERE identificacion = $2",
+      [hash, rows[0].persona_id],
+    );
+    await client.query(
+      "UPDATE recuperacion_contrasena SET usado = TRUE WHERE persona_id = $1",
+      [rows[0].persona_id],
+    );
+    await client.query("COMMIT");
+    res.json({ mensaje: "Tu contraseña se actualizó. Ya puedes iniciar sesión." });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error(error);
+    res.status(500).json({ error: "No se pudo restablecer la contraseña" });
+  } finally {
+    client.release();
   }
 });
 

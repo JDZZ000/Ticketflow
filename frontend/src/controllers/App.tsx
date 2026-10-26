@@ -385,6 +385,8 @@ export default function App() {
         aviso={avisoSesion}
       />
     );
+  if (screen === "forgot-password") return <ForgotPasswordPage onNav={nav} />;
+  if (screen === "reset-password") return <ResetPasswordPage onNav={nav} />;
   if (screen === "register") return <RegisterPage onNav={nav} />;
 
   if (
