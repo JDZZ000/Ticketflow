@@ -6,7 +6,8 @@ const RUTAS: { screen: Screen; path: string }[] = [
   { screen: "landing", path: "/" },
   { screen: "login", path: "/login" },
   { screen: "register", path: "/registro" },
-
+  { screen: "forgot-password", path: "/recuperar" },
+  { screen: "reset-password", path: "/restablecer" },
   { screen: "client-dashboard", path: "/cliente" },
   { screen: "client-events", path: "/cliente/eventos" },
   { screen: "client-event-detail", path: "/cliente/eventos/:id" },
