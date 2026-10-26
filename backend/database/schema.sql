@@ -117,13 +117,24 @@ CREATE TABLE reserva (
     stripe_session_id  TEXT,                                                   -- pago en Stripe (Checkout)
     fecha_pago         TIMESTAMP                                               -- cuándo se confirmó el pago
 );
-
+-- ── 5.1 Recuperación de contraseña ───────────────────────────────────────────
+-- Enlaces de un solo uso para restablecer la contraseña (se guarda el hash)
+CREATE TABLE recuperacion_contrasena (
+id SERIAL PRIMARY KEY,
+persona_id VARCHAR(20) NOT NULL REFERENCES persona (identificacion)
+ON DELETE CASCADE,
+token_hash VARCHAR(64) NOT NULL UNIQUE, -- SHA-256 del token, nunca el token
+expira TIMESTAMP NOT NULL,
+usado BOOLEAN NOT NULL DEFAULT FALSE,
+creado TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 -- ── 6. Índices para las consultas más frecuentes ─────────────────────────────
 
 CREATE INDEX idx_persona_ciudad   ON persona (ciudad_id);
 CREATE INDEX idx_evento_ciudad    ON evento (ciudad_id);
 CREATE INDEX idx_evento_agente    ON evento (agente_id);
 CREATE INDEX idx_evento_estado    ON evento (estado_evento_id);
+CREATE INDEX idx_recuperacion_persona ON recuperacion_contrasena (persona_id);
 CREATE INDEX idx_reserva_cliente  ON reserva (cliente_id);
 CREATE INDEX idx_reserva_evento   ON reserva (evento_id);
 CREATE INDEX idx_reserva_stripe   ON reserva (stripe_session_id);
@@ -150,3 +161,4 @@ INSERT INTO ciudad (nombre, departamento_id)
           UNION ALL SELECT 'Medellín', 'Antioquia'
           UNION ALL SELECT 'Cali', 'Valle del Cauca') c
       ON c.departamento = dep.nombre;
+
