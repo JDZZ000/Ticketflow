@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { pool } from "../db.js";
+import crypto from "node:crypto";
 
 const router = Router();
 
@@ -15,7 +16,15 @@ function firmarToken(usuario) {
     { expiresIn: "8h" },
   );
 }
-
+const sha256 = (texto) => crypto.createHash("sha256").update(texto).digest("hex");
+const RESPUESTA = {
+mensaje:
+"Si el correo está registrado, te enviamos las instrucciones para recuperar tu contraseña.",
+};
+function enviarEnlace(correo, enlace) {
+// Modo desarrollo: el enlace se imprime en la consola del servidor
+console.log(`[recuperación] ${correo}: ${enlace}`);
+}
 // POST /api/auth/registro
 router.post("/registro", async (req, res) => {
   const {
@@ -152,6 +161,40 @@ router.post("/login", async (req, res) => {
       correo: fila.correo,
       rol: fila.rol,
     };
+    router.post("/recuperar", async (req, res) => {
+const correo = String(req.body?.correo ?? "").trim().toLowerCase();
+if (!/^\S+@\S+\.\S+$/.test(correo)) {
+return res.status(400).json({ error: "Escribe un correo válido" });
+}
+try {
+// Solo clientes y agentes (el administrador lo restablece otro administrador)
+const { rows } = await pool.query(
+`SELECT p.identificacion FROM persona p
+WHERE p.correo = $1
+AND (EXISTS (SELECT 1 FROM cliente WHERE persona_id = p.identificacion)
+OR EXISTS (SELECT 1 FROM agente WHERE persona_id = p.identificacion))`,
+[correo],
+);
+if (rows[0]) {
+const token = crypto.randomBytes(32).toString("hex"); // 64 caracteres
+await pool.query(
+"UPDATE recuperacion_contrasena SET usado = TRUE WHERE persona_id = $1 AND usado = FALSE",
+[rows[0].identificacion],
+);
+await pool.query(
+`INSERT INTO recuperacion_contrasena (persona_id, token_hash, expira)
+VALUES ($1, $2, NOW() + INTERVAL '30 minutes')`,
+[rows[0].identificacion, sha256(token)],
+);
+const base = process.env.APP_URL ?? "http://localhost:8443";
+enviarEnlace(correo, `${base}/restablecer?token=${token}`);
+}
+res.json(RESPUESTA); // la misma respuesta exista o no el correo
+} catch (error) {
+console.error(error);
+res.status(500).json({ error: "No se pudo procesar la solicitud" });
+}
+});
     res.json({ token: firmarToken(usuario), usuario });
   } catch (error) {
     console.error(error);
