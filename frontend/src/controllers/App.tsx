@@ -11,6 +11,8 @@ import type { Reserva, ReservaStatus, Evento } from "../models/types";
 import { LandingPage } from "./pages/auth/LandingPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
+import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
 import { DashboardLayout } from "../views/layouts/DashboardLayout";
 import { ClientDashboard } from "./pages/client/ClientDashboard";
 import { ClientEvents } from "./pages/client/ClientEvents";

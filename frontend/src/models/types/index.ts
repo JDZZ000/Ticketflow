@@ -4,6 +4,8 @@ export type Screen =
   | "landing"
   | "login"
   | "register"
+  | "forgot-password"
+  | "reset-password"
   | "client-dashboard"
   | "client-events"
   | "client-event-detail"

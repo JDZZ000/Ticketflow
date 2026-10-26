@@ -241,7 +241,10 @@ export function LoginPage({
                 {error && <p className="text-red-500 text-sm">{error}</p>}
               </div>
               <div className="flex justify-end mb-6">
-                <button className="text-sm text-violet-600 hover:underline font-medium">
+                <button 
+                onClick={() => onNav("forgot-password")}
+                className="text-sm text-violet-600 hover:underline font-medium"
+                >
                   ¿Olvidaste tu contraseña?
                 </button>
               </div>
